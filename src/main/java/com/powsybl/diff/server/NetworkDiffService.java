@@ -24,6 +24,8 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.iidm.diff.DiffConfig;
+import com.powsybl.iidm.diff.DiffEquipment;
+import com.powsybl.iidm.diff.DiffEquipmentType;
 import com.powsybl.iidm.diff.NetworkDiff;
 import com.powsybl.iidm.diff.NetworkDiffResults;
 import com.powsybl.iidm.network.Network;
@@ -70,7 +72,8 @@ class NetworkDiffService {
     String diff(UUID network1Uuid, UUID network2Uuid, String vlId) {
 
         NetworkDiff ndiff = new NetworkDiff(config);
-        NetworkDiff.DiffEquipment diffEquipment = ndiff.new DiffEquipment();
+        DiffEquipment diffEquipment = new DiffEquipment();
+        diffEquipment.setEquipmentTypes(Collections.singletonList(DiffEquipmentType.VOLTAGE_LEVELS));
 
         Network network1 = getNetwork(network1Uuid);
         Network network2 = getNetwork(network2Uuid);
@@ -86,8 +89,6 @@ class NetworkDiffService {
         }
 
         diffEquipment.setVoltageLevels(Collections.singletonList(vlId));
-        //for now, disable comparison for branches
-        diffEquipment.setBranches(Collections.singletonList("DOESNOTEXIST"));
         NetworkDiffResults diffVl = ndiff.diff(network1, network2, diffEquipment);
 
         String jsonDiff = NetworkDiff.writeJson(diffVl);
