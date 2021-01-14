@@ -117,7 +117,7 @@ class NetworkDiffService {
         try (StringWriter svgWriter = new StringWriter();
              StringWriter metadataWriter = new StringWriter();
              StringWriter jsonWriter = new StringWriter()) {
-            DiagramStyleProvider styleProvider = new DiffStyleProvider(network, vlDiffs, branchDiffs);
+            DiagramStyleProvider styleProvider = new DiffStyleProvider(vlDiffs, branchDiffs);
             LayoutParameters layoutParameters = new LayoutParameters();
             ComponentLibrary componentLibrary = new ResourcesComponentLibrary("/ConvergenceLibrary");
 
