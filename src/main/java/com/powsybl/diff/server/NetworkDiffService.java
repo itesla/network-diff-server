@@ -96,8 +96,11 @@ class NetworkDiffService {
 
         String jsonDiff = NetworkDiff.writeJson(diffVl);
 
-        LOGGER.info("network1 uuid: {}, network2 uuid: {}, vl: {}, diff: {}", network1Uuid, network2Uuid, vlId, jsonDiff);
+        //NaN is not part of the JSON standard and frontend would fail when parsing it
+        //it should be handled at the source, though
+        jsonDiff = jsonDiff.replace(": NaN,", ": \"Nan\",");
 
+        LOGGER.info("network1 uuid: {}, network2 uuid: {}, vl: {}, diff: {}", network1Uuid, network2Uuid, vlId, jsonDiff);
         return jsonDiff;
     }
 
