@@ -146,7 +146,7 @@ class NetworkDiffService {
         return svgData;
     }
 
-    public String getVoltageLevelSvg2(UUID network1Uuid, UUID network2Uuid, String vlId) {
+    public String getVoltageLevelSvgDiff(UUID network1Uuid, UUID network2Uuid, String vlId) {
         try {
             Network network = networkStoreService.getNetwork(network1Uuid);
 
@@ -154,15 +154,15 @@ class NetworkDiffService {
             ObjectMapper objectMapper = new ObjectMapper();
             Map<String, Object> jsonMap = objectMapper.readValue(diffVls,
                     new TypeReference<Map<String, Object>>() { });
-            List<String> switchesDiff = (List<String>) ((Map) ((List) (jsonMap.get("diff.VoltageLevels"))).get(0)).get("vl.switchesStatus-delta");
-            List<String> branchesDiff = (List<String>) ((ArrayList) jsonMap.get("diff.Branches")).stream().map(t -> ((Map) t).get("branch.terminalStatus-delta"))
-                    .flatMap(t -> ((ArrayList<String>) t).stream()).collect(Collectors.toList());
-            LOGGER.info("voltageLevelSvg2 - network1={}, network2={}, vl={}, switchesDiff: {}, branchesDiff: {}", network1Uuid, network2Uuid, vlId, switchesDiff, branchesDiff);
+            List<String> switchesDiff = (List<String>) ((List) jsonMap.get("diff.VoltageLevels")).stream().map(t -> ((Map) t).get("vl.switchesStatus-delta"))
+                    .flatMap(t -> ((List<String>) t).stream()).collect(Collectors.toList());
+            List<String> branchesDiff = (List<String>) ((List) jsonMap.get("diff.Branches")).stream().map(t -> ((Map) t).get("branch.terminalStatus-delta"))
+                    .flatMap(t -> ((List<String>) t).stream()).collect(Collectors.toList());
+            LOGGER.info("network1={}, network2={}, vl={}, switchesDiff: {}, branchesDiff: {}", network1Uuid, network2Uuid, vlId, switchesDiff, branchesDiff);
 
             return writeSVG(network, vlId, switchesDiff, branchesDiff);
         } catch (PowsyblException | IOException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         }
     }
-
 }
