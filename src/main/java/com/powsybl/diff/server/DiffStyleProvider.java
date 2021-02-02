@@ -9,7 +9,6 @@ package com.powsybl.diff.server;
 import com.powsybl.sld.library.ComponentSize;
 import com.powsybl.sld.model.Edge;
 import com.powsybl.sld.model.FeederNode;
-import com.powsybl.sld.model.FeederType;
 import com.powsybl.sld.model.Node;
 import com.powsybl.sld.model.Node.NodeType;
 import com.powsybl.sld.svg.DefaultDiagramStyleProvider;
@@ -76,7 +75,8 @@ public class DiffStyleProvider extends DefaultDiagramStyleProvider {
         if (node instanceof FeederNode) {
             String arrow1Color = DEFAULT_COLOR;
             String arrow2Color = DEFAULT_COLOR;
-            if (FeederType.BRANCH.equals(((FeederNode) node).getFeederType()) && branchDiffs.contains(node.getId())) {
+            //if (FeederType.BRANCH.equals(((FeederNode) node).getFeederType()) && branchDiffs.contains(node.getId())) {
+            if (branchDiffs.contains(node.getId())) {
                 arrow1Color = DIFF_COLOR;
                 arrow2Color = DIFF_COLOR;
             }
