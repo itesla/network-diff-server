@@ -96,4 +96,15 @@ public class NetworkDiffController {
         return ResponseEntity.ok().contentType(MediaType.valueOf("image/svg+xml")).body(svg);
     }
 
+    @GetMapping(value = "/networks/{network1Uuid}/diff/{network2Uuid}/sub/{subId}")
+    @ApiOperation(value = "compare two networks substations", produces = "application/json")
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "network diff")})
+    public ResponseEntity<String> diffSubstation(
+            @ApiParam(value = "Network1 UUID") @PathVariable("network1Uuid") UUID network1Uuid,
+            @ApiParam(value = "Network2 UUID") @PathVariable("network2Uuid") UUID network2Uuid,
+            @ApiParam(value = "Substation ID") @PathVariable("subId") String subId) {
+
+        String jsonDiff = networkDiffService.diffSubstation(network1Uuid, network2Uuid, subId);
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(jsonDiff);
+    }
 }
