@@ -9,6 +9,7 @@ package com.powsybl.diff.server;
 import com.powsybl.sld.library.ComponentSize;
 import com.powsybl.sld.model.Edge;
 import com.powsybl.sld.model.FeederNode;
+import com.powsybl.sld.model.FeederType;
 import com.powsybl.sld.model.Node;
 import com.powsybl.sld.model.Node.NodeType;
 import com.powsybl.sld.svg.DefaultDiagramStyleProvider;
@@ -35,19 +36,25 @@ public class DiffStyleProvider extends DefaultDiagramStyleProvider {
     private static final String DIFF_COLOR = "red";
     private static final String DEFAULT_COLOR = "black";
 
-    private List<String> vlDiffs;
+    private List<String> switchDiffs;
+    private List<String> branchSideDiffs;
     private List<String> branchDiffs;
 
-    public DiffStyleProvider(List<String> vlDiffs, List<String> branchDiffs) {
-        this.vlDiffs = Objects.requireNonNull(vlDiffs);
+    public DiffStyleProvider(List<String> switchDiffs, List<String> branchSideDiffs, List<String> branchDiffs) {
+        this.switchDiffs = Objects.requireNonNull(switchDiffs);
+        this.branchSideDiffs = Objects.requireNonNull(branchSideDiffs);
         this.branchDiffs = Objects.requireNonNull(branchDiffs);
     }
 
     @Override
     public Map<String, String> getSvgNodeStyleAttributes(Node node, ComponentSize size, String subComponentName, boolean isShowInternalNodes) {
+//        LOGGER.info("** node: Id='{}', type='{}', componentType='{}', equipmentId='{}'", node.getId(), node.getType(), node.getComponentType(), node.getEquipmentId());
         Map<String, String> style = super.getSvgNodeStyleAttributes(node, size, subComponentName, isShowInternalNodes);
         String nodeColor = DEFAULT_COLOR;
-        if (NodeType.SWITCH.equals(node.getType()) && vlDiffs.contains(node.getId())) {
+        if (NodeType.SWITCH.equals(node.getType()) && switchDiffs.contains(node.getId())) {
+            nodeColor = DIFF_COLOR;
+        }
+        if ("TWO_WINDINGS_TRANSFORMER".equals(node.getComponentType()) && branchDiffs.contains(node.getId())) {
             nodeColor = DIFF_COLOR;
         }
         style.put("stroke", nodeColor);
@@ -60,7 +67,7 @@ public class DiffStyleProvider extends DefaultDiagramStyleProvider {
         Node node1 = edge.getNode1();
         Node node2 = edge.getNode2();
         String wireColor = DEFAULT_COLOR;
-        if (branchDiffs.contains(node1.getId()) || branchDiffs.contains(node2.getId())) {
+        if (branchSideDiffs.contains(node1.getId()) || branchSideDiffs.contains(node2.getId())) {
             wireColor = DIFF_COLOR;
         }
         style.put("stroke", wireColor);
@@ -71,12 +78,13 @@ public class DiffStyleProvider extends DefaultDiagramStyleProvider {
     @Override
     public Optional<String> getCssNodeStyleAttributes(Node node, boolean isShowInternalNodes) {
         Objects.requireNonNull(node);
-        LOGGER.info("node: Id='{}', type='{}', componentType='{}', equipmentId='{}'", node.getId(), node.getType(), node.getComponentType(), node.getEquipmentId());
+//        LOGGER.info("node: Id='{}', type='{}', componentType='{}', equipmentId='{}'", node.getId(), node.getType(), node.getComponentType(), node.getEquipmentId());
         if (node instanceof FeederNode) {
             String arrow1Color = DEFAULT_COLOR;
             String arrow2Color = DEFAULT_COLOR;
-            //if (FeederType.BRANCH.equals(((FeederNode) node).getFeederType()) && branchDiffs.contains(node.getId())) {
-            if (branchDiffs.contains(node.getId())) {
+            FeederType nodeFeederType = ((FeederNode) node).getFeederType();
+            if ((FeederType.BRANCH.equals(nodeFeederType) || FeederType.TWO_WINDINGS_TRANSFORMER_LEG.equals(nodeFeederType))
+                && branchSideDiffs.contains(node.getId())) {
                 arrow1Color = DIFF_COLOR;
                 arrow2Color = DIFF_COLOR;
             }

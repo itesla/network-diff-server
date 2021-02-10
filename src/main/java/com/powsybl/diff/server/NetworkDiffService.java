@@ -129,20 +129,20 @@ class NetworkDiffService {
         Objects.requireNonNull(diffs);
         try {
             Network network = networkStoreService.getNetwork(networkUuid);
-            return writeSVG(network, vl, diffs, Collections.emptyList());
+            return writeSVG(network, vl, diffs, Collections.emptyList(), Collections.emptyList());
         } catch (PowsyblException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Network '" + networkUuid + "' not found");
         }
     }
 
-    private String writeSVG(Network network, String vlId, List<String> vlDiffs, List<String> branchDiffs) {
+    private String writeSVG(Network network, String vlId, List<String> switchDiffs, List<String> branchSideDiffs, List<String> branchDiffs) {
         String svgData;
         String metadataData;
         String jsonData;
         try (StringWriter svgWriter = new StringWriter();
              StringWriter metadataWriter = new StringWriter();
              StringWriter jsonWriter = new StringWriter()) {
-            DiagramStyleProvider styleProvider = new DiffStyleProvider(vlDiffs, branchDiffs);
+            DiagramStyleProvider styleProvider = new DiffStyleProvider(switchDiffs, branchSideDiffs, branchDiffs);
             LayoutParameters layoutParameters = new LayoutParameters();
             ComponentLibrary componentLibrary = new ResourcesComponentLibrary("/ConvergenceLibrary");
             DiagramLabelProvider initProvider = new DiffDiagramLabelProvider(network, componentLibrary, layoutParameters);
@@ -176,16 +176,17 @@ class NetworkDiffService {
             String jsonDiff = diff(network1Uuid, network1, network2Uuid, network2, vlId);
             ObjectMapper objectMapper = new ObjectMapper();
             Map<String, Object> jsonMap = objectMapper.readValue(jsonDiff, new TypeReference<Map<String, Object>>() { });
-            List<String> switchesDiff = (List<String>) ((List) jsonMap.get("diff.VoltageLevels")).stream()
+            List<String> switchDiffs = (List<String>) ((List) jsonMap.get("diff.VoltageLevels")).stream()
                     .map(t -> ((Map) t).get("vl.switchesStatus-delta"))
                     .flatMap(t -> ((List<String>) t).stream())
                     .collect(Collectors.toList());
-            List<String> branchesDiff = (List<String>) ((List) jsonMap.get("diff.Branches")).stream()
+            List<String> branchSideDiffs = (List<String>) ((List) jsonMap.get("diff.Branches")).stream()
                     .map(t -> ((Map) t).get("branch.terminalStatus-delta"))
                     .flatMap(t -> ((List<String>) t).stream())
                     .collect(Collectors.toList());
-            LOGGER.info("network1={}, network2={}, vl={}, switchesDiff: {}, branchesDiff: {}", network1Uuid, network2Uuid, vlId, switchesDiff, branchesDiff);
-            return writeSVG(network1, vlId, switchesDiff, branchesDiff);
+            LOGGER.info("network1={}, network2={}, vl={}, switchDiffs: {}, branchSideDiffs: {}, branchDiffs: {}",
+                        network1Uuid, network2Uuid, vlId, switchDiffs, branchSideDiffs, Collections.emptyList());
+            return writeSVG(network1, vlId, switchDiffs, branchSideDiffs, Collections.emptyList());
         } catch (PowsyblException | IOException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         }
@@ -218,14 +219,14 @@ class NetworkDiffService {
         return jsonDiff;
     }
 
-    private String writesubstationSVG(Network network, String substationId, List<String> vlDiffs, List<String> branchDiffs) {
+    private String writesubstationSVG(Network network, String substationId, List<String> switchDiffs, List<String> branchSideDiffs, List<String> branchDiffs) {
         String svgData;
         String metadataData;
         String jsonData;
         try (StringWriter svgWriter = new StringWriter();
              StringWriter metadataWriter = new StringWriter();
              StringWriter jsonWriter = new StringWriter()) {
-            DiagramStyleProvider styleProvider = new DiffStyleProvider(vlDiffs, branchDiffs);
+            DiagramStyleProvider styleProvider = new DiffStyleProvider(switchDiffs, branchSideDiffs, branchDiffs);
             LayoutParameters layoutParameters = new LayoutParameters();
             ComponentLibrary componentLibrary = new ResourcesComponentLibrary("/ConvergenceLibrary");
             DiagramLabelProvider initProvider = new DiffDiagramLabelProvider(network, componentLibrary, layoutParameters);
@@ -260,16 +261,21 @@ class NetworkDiffService {
             String jsonDiff = diffSubstation(network1Uuid, network1, network2Uuid, network2, substationId);
             ObjectMapper objectMapper = new ObjectMapper();
             Map<String, Object> jsonMap = objectMapper.readValue(jsonDiff, new TypeReference<Map<String, Object>>() { });
-            List<String> switchesDiff = (List<String>) ((List) jsonMap.get("diff.VoltageLevels")).stream()
+            List<String> switchDiffs = (List<String>) ((List) jsonMap.get("diff.VoltageLevels")).stream()
                     .map(t -> ((Map) t).get("vl.switchesStatus-delta"))
                     .flatMap(t -> ((List<String>) t).stream())
                     .collect(Collectors.toList());
-            List<String> branchesDiff = (List<String>) ((List) jsonMap.get("diff.Branches")).stream()
+            List<String> branchSideDiffs = (List<String>) ((List) jsonMap.get("diff.Branches")).stream()
                     .map(t -> ((Map) t).get("branch.terminalStatus-delta"))
                     .flatMap(t -> ((List<String>) t).stream())
                     .collect(Collectors.toList());
-            LOGGER.info("network1={}, network2={}, substation={}, switchesDiff: {}, branchesDiff: {}", network1Uuid, network2Uuid, substationId, switchesDiff, branchesDiff);
-            return writesubstationSVG(network1, substationId, switchesDiff, branchesDiff);
+            List<String> branchDiffs = (List<String>) ((List) jsonMap.get("diff.Branches")).stream()
+                    .map(t -> ((Map) t).get("branch.branchId1"))
+                    .map(br -> br + "_ONE_" + br + "_TWO")
+                    .collect(Collectors.toList());
+            LOGGER.info("network1={}, network2={}, substation={}, switchDiffs: {}, branchSideDiffs: {}, branchDiffs: {}",
+                        network1Uuid, network2Uuid, substationId, switchDiffs, branchSideDiffs, branchDiffs);
+            return writesubstationSVG(network1, substationId, switchDiffs, branchSideDiffs, branchDiffs);
         } catch (PowsyblException | IOException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         }
