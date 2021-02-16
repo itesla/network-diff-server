@@ -6,26 +6,12 @@
  */
 package com.powsybl.diff.server;
 
-import java.util.Objects;
-
-import org.apache.commons.math3.util.Precision;
-
-import com.powsybl.iidm.network.Branch;
-import com.powsybl.iidm.network.Injection;
 import com.powsybl.iidm.network.Network;
-import com.powsybl.iidm.network.Terminal;
-import com.powsybl.iidm.network.ThreeWindingsTransformer;
-import com.powsybl.iidm.network.TwoWindingsTransformer;
 import com.powsybl.sld.layout.LayoutParameters;
 import com.powsybl.sld.library.ComponentLibrary;
-import com.powsybl.sld.model.Feeder2WTLegNode;
-import com.powsybl.sld.model.Feeder3WTLegNode;
-import com.powsybl.sld.model.FeederBranchNode;
-import com.powsybl.sld.model.FeederInjectionNode;
-import com.powsybl.sld.model.FeederNode;
-import com.powsybl.sld.model.Node;
 import com.powsybl.sld.svg.DefaultDiagramLabelProvider;
-import com.powsybl.sld.svg.InitialValue;
+
+import java.util.Objects;
 
 /**
  *
@@ -40,7 +26,7 @@ public class DiffDiagramLabelProvider extends DefaultDiagramLabelProvider {
         this.network = Objects.requireNonNull(net);
     }
 
-    @Override
+/*    @Override
     public InitialValue getInitialValue(Node node) {
         Objects.requireNonNull(node);
         switch (node.getType()) {
@@ -105,5 +91,5 @@ public class DiffDiagramLabelProvider extends DefaultDiagramLabelProvider {
             return buildInitialValue(transformer.getTerminal(side));
         }
         return new InitialValue(null, null, null, null, null, null);
-    }
+    }*/
 }

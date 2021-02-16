@@ -6,39 +6,12 @@
  */
 package com.powsybl.diff.server;
 
-import java.io.IOException;
-import java.io.StringWriter;
-import java.io.UncheckedIOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
-
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.commons.PowsyblException;
-import com.powsybl.iidm.diff.DiffConfig;
-import com.powsybl.iidm.diff.DiffEquipment;
-import com.powsybl.iidm.diff.DiffEquipmentType;
-import com.powsybl.iidm.diff.NetworkDiff;
-import com.powsybl.iidm.diff.NetworkDiffResults;
-import com.powsybl.iidm.network.Branch;
-import com.powsybl.iidm.network.Line;
-import com.powsybl.iidm.network.Network;
-import com.powsybl.iidm.network.Substation;
-import com.powsybl.iidm.network.TwoWindingsTransformer;
-import com.powsybl.iidm.network.VoltageLevel;
+import com.powsybl.iidm.diff.*;
+import com.powsybl.iidm.import_.Importers;
+import com.powsybl.iidm.network.*;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.sld.GraphBuilder;
 import com.powsybl.sld.NetworkGraphBuilder;
@@ -52,6 +25,21 @@ import com.powsybl.sld.library.ResourcesComponentLibrary;
 import com.powsybl.sld.svg.DefaultSVGWriter;
 import com.powsybl.sld.svg.DiagramLabelProvider;
 import com.powsybl.sld.svg.DiagramStyleProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.io.IOException;
+import java.io.StringWriter;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author Christian Biasuzzi <christian.biasuzzi@techrain.eu>
@@ -129,20 +117,20 @@ class NetworkDiffService {
         Objects.requireNonNull(diffs);
         try {
             Network network = networkStoreService.getNetwork(networkUuid);
-            return writeSVG(network, vl, diffs, Collections.emptyList(), Collections.emptyList());
+            return writeSVG(network, vl, diffs, Collections.emptyList());
         } catch (PowsyblException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Network '" + networkUuid + "' not found");
         }
     }
 
-    private String writeSVG(Network network, String vlId, List<String> switchDiffs, List<String> branchSideDiffs, List<String> branchDiffs) {
+    private String writeSVG(Network network, String vlId, List<String> vlDiffs, List<String> branchDiffs) {
         String svgData;
         String metadataData;
         String jsonData;
         try (StringWriter svgWriter = new StringWriter();
              StringWriter metadataWriter = new StringWriter();
              StringWriter jsonWriter = new StringWriter()) {
-            DiagramStyleProvider styleProvider = new DiffStyleProvider(switchDiffs, branchSideDiffs, branchDiffs);
+            DiagramStyleProvider styleProvider = new DiffStyleProvider(vlDiffs, vlDiffs, branchDiffs);
             LayoutParameters layoutParameters = new LayoutParameters();
             ComponentLibrary componentLibrary = new ResourcesComponentLibrary("/ConvergenceLibrary");
             DiagramLabelProvider initProvider = new DiffDiagramLabelProvider(network, componentLibrary, layoutParameters);
@@ -176,17 +164,16 @@ class NetworkDiffService {
             String jsonDiff = diff(network1Uuid, network1, network2Uuid, network2, vlId);
             ObjectMapper objectMapper = new ObjectMapper();
             Map<String, Object> jsonMap = objectMapper.readValue(jsonDiff, new TypeReference<Map<String, Object>>() { });
-            List<String> switchDiffs = (List<String>) ((List) jsonMap.get("diff.VoltageLevels")).stream()
+            List<String> switchesDiff = (List<String>) ((List) jsonMap.get("diff.VoltageLevels")).stream()
                     .map(t -> ((Map) t).get("vl.switchesStatus-delta"))
                     .flatMap(t -> ((List<String>) t).stream())
                     .collect(Collectors.toList());
-            List<String> branchSideDiffs = (List<String>) ((List) jsonMap.get("diff.Branches")).stream()
+            List<String> branchesDiff = (List<String>) ((List) jsonMap.get("diff.Branches")).stream()
                     .map(t -> ((Map) t).get("branch.terminalStatus-delta"))
                     .flatMap(t -> ((List<String>) t).stream())
                     .collect(Collectors.toList());
-            LOGGER.info("network1={}, network2={}, vl={}, switchDiffs: {}, branchSideDiffs: {}, branchDiffs: {}",
-                        network1Uuid, network2Uuid, vlId, switchDiffs, branchSideDiffs, Collections.emptyList());
-            return writeSVG(network1, vlId, switchDiffs, branchSideDiffs, Collections.emptyList());
+            LOGGER.info("network1={}, network2={}, vl={}, switchesDiff: {}, branchesDiff: {}", network1Uuid, network2Uuid, vlId, switchesDiff, branchesDiff);
+            return writeSVG(network1, vlId, switchesDiff, branchesDiff);
         } catch (PowsyblException | IOException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         }
@@ -219,15 +206,23 @@ class NetworkDiffService {
         return jsonDiff;
     }
 
-    private String writesubstationSVG(Network network, String substationId, List<String> switchDiffs, List<String> branchSideDiffs, List<String> branchDiffs) {
+    private String writesubstationSVG(Network network, String substationId, List<String> vlDiffs, List<String> branchDiffs) {
         String svgData;
         String metadataData;
         String jsonData;
         try (StringWriter svgWriter = new StringWriter();
              StringWriter metadataWriter = new StringWriter();
              StringWriter jsonWriter = new StringWriter()) {
-            DiagramStyleProvider styleProvider = new DiffStyleProvider(switchDiffs, branchSideDiffs, branchDiffs);
+            DiagramStyleProvider styleProvider = new DiffStyleProvider(vlDiffs, vlDiffs, branchDiffs);
             LayoutParameters layoutParameters = new LayoutParameters();
+
+            layoutParameters.setCellWidth(25);
+            layoutParameters.setShowGrid(true);
+            layoutParameters.setHorizontalSubstationPadding(5);
+            layoutParameters.setAdaptCellHeightToContent(true);
+            layoutParameters.setScaleFactor(1);
+            layoutParameters.setCssInternal(true);
+
             ComponentLibrary componentLibrary = new ResourcesComponentLibrary("/ConvergenceLibrary");
             DiagramLabelProvider initProvider = new DiffDiagramLabelProvider(network, componentLibrary, layoutParameters);
             GraphBuilder graphBuilder = new NetworkGraphBuilder(network);
@@ -261,23 +256,58 @@ class NetworkDiffService {
             String jsonDiff = diffSubstation(network1Uuid, network1, network2Uuid, network2, substationId);
             ObjectMapper objectMapper = new ObjectMapper();
             Map<String, Object> jsonMap = objectMapper.readValue(jsonDiff, new TypeReference<Map<String, Object>>() { });
-            List<String> switchDiffs = (List<String>) ((List) jsonMap.get("diff.VoltageLevels")).stream()
+            List<String> switchesDiff = (List<String>) ((List) jsonMap.get("diff.VoltageLevels")).stream()
                     .map(t -> ((Map) t).get("vl.switchesStatus-delta"))
                     .flatMap(t -> ((List<String>) t).stream())
                     .collect(Collectors.toList());
-            List<String> branchSideDiffs = (List<String>) ((List) jsonMap.get("diff.Branches")).stream()
+            List<String> branchesDiff = (List<String>) ((List) jsonMap.get("diff.Branches")).stream()
                     .map(t -> ((Map) t).get("branch.terminalStatus-delta"))
                     .flatMap(t -> ((List<String>) t).stream())
                     .collect(Collectors.toList());
-            List<String> branchDiffs = (List<String>) ((List) jsonMap.get("diff.Branches")).stream()
-                    .map(t -> ((Map) t).get("branch.branchId1"))
-                    .map(br -> br + "_ONE_" + br + "_TWO")
-                    .collect(Collectors.toList());
-            LOGGER.info("network1={}, network2={}, substation={}, switchDiffs: {}, branchSideDiffs: {}, branchDiffs: {}",
-                        network1Uuid, network2Uuid, substationId, switchDiffs, branchSideDiffs, branchDiffs);
-            return writesubstationSVG(network1, substationId, switchDiffs, branchSideDiffs, branchDiffs);
+            LOGGER.info("network1={}, network2={}, substation={}, switchesDiff: {}, branchesDiff: {}", network1Uuid, network2Uuid, substationId, switchesDiff, branchesDiff);
+            return writesubstationSVG(network1, substationId, switchesDiff, branchesDiff);
         } catch (PowsyblException | IOException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         }
+    }
+
+    public String getSubstationSvgDiff(Network network1, Network network2, String substationId) {
+        Objects.requireNonNull(network1);
+        Objects.requireNonNull(network2);
+        Objects.requireNonNull(substationId);
+        try {
+            String jsonDiff = diffSubstation(network1, network2, substationId);
+            ObjectMapper objectMapper = new ObjectMapper();
+            Map<String, Object> jsonMap = objectMapper.readValue(jsonDiff, new TypeReference<Map<String, Object>>() { });
+            List<String> switchesDiff = (List<String>) ((List) jsonMap.get("diff.VoltageLevels")).stream()
+                    .map(t -> ((Map) t).get("vl.switchesStatus-delta"))
+                    .flatMap(t -> ((List<String>) t).stream())
+                    .collect(Collectors.toList());
+            List<String> branchesDiff = (List<String>) ((List) jsonMap.get("diff.Branches")).stream()
+                    .map(t -> ((Map) t).get("branch.terminalStatus-delta"))
+                    .flatMap(t -> ((List<String>) t).stream())
+                    .collect(Collectors.toList());
+            return writesubstationSVG(network1, substationId, switchesDiff, branchesDiff);
+        } catch (PowsyblException | IOException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    private String diffSubstation(Network network1, Network network2, String substationId) {
+        Substation substation1 = network1.getSubstation(substationId);
+        Substation substation2 = network2.getSubstation(substationId);
+        List<String> voltageLevels = substation1.getVoltageLevelStream().map(VoltageLevel::getId).collect(Collectors.toList());
+        List<String> branches = substation1.getVoltageLevelStream().flatMap(vl -> vl.getConnectableStream(Line.class)).map(Line::getId).collect(Collectors.toList());
+        List<String> twts = substation1.getTwoWindingsTransformerStream().map(TwoWindingsTransformer::getId).collect(Collectors.toList());
+        branches.addAll(twts);
+        String jsonDiff = diff(network1, network2, voltageLevels, branches);
+        return jsonDiff;
+    }
+
+    public static void main1(String[] args) throws IOException {
+        Network network1 = Importers.loadNetwork(Paths.get("/home/itesla/cases/public/528ffaa8-0602-4bb6-b2f1-214bdf133891/20200521_0930_SN5_FR0.xiidm"));
+        Network network2 = Importers.loadNetwork(Paths.get("/home/itesla/cases/public/e0293dbe-a2ba-45f3-a292-0d2403e5b6b1/20200521_0930_FO5_FR0.xiidm"));
+        NetworkDiffService dserv = new NetworkDiffService();
+        Files.write(Paths.get("/tmp/outsvg1_v19.svg"), dserv.getSubstationSvgDiff(network1, network2, "P.AND").getBytes());
     }
 }

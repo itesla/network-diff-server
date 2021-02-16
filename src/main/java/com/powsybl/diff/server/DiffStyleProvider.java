@@ -6,19 +6,12 @@
  */
 package com.powsybl.diff.server;
 
-import com.powsybl.sld.library.ComponentSize;
-import com.powsybl.sld.model.Edge;
-import com.powsybl.sld.model.FeederNode;
-import com.powsybl.sld.model.FeederType;
-import com.powsybl.sld.model.Node;
-import com.powsybl.sld.model.Node.NodeType;
 import com.powsybl.sld.svg.DefaultDiagramStyleProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
-import static com.powsybl.sld.svg.DiagramStyles.escapeClassName;
 
 /**
  *
@@ -46,6 +39,8 @@ public class DiffStyleProvider extends DefaultDiagramStyleProvider {
         this.branchDiffs = Objects.requireNonNull(branchDiffs);
     }
 
+
+/*
     @Override
     public Map<String, String> getSvgNodeStyleAttributes(Node node, ComponentSize size, String subComponentName, boolean isShowInternalNodes) {
 //        LOGGER.info("** node: Id='{}', type='{}', componentType='{}', equipmentId='{}'", node.getId(), node.getType(), node.getComponentType(), node.getEquipmentId());
@@ -60,7 +55,9 @@ public class DiffStyleProvider extends DefaultDiagramStyleProvider {
         style.put("stroke", nodeColor);
         return style;
     }
+*/
 
+/*
     @Override
     public Map<String, String> getSvgWireStyleAttributes(Edge edge, boolean highlightLineState) {
         Map<String, String> style = super.getSvgWireStyleAttributes(edge, highlightLineState);
@@ -74,8 +71,9 @@ public class DiffStyleProvider extends DefaultDiagramStyleProvider {
         style.put("stroke-width", "1");
         return style;
     }
+*/
 
-    @Override
+/*    @Override
     public Optional<String> getCssNodeStyleAttributes(Node node, boolean isShowInternalNodes) {
         Objects.requireNonNull(node);
 //        LOGGER.info("node: Id='{}', type='{}', componentType='{}', equipmentId='{}'", node.getId(), node.getType(), node.getComponentType(), node.getEquipmentId());
@@ -112,5 +110,5 @@ public class DiffStyleProvider extends DefaultDiagramStyleProvider {
             return Optional.of(style.toString());
         }
         return super.getCssNodeStyleAttributes(node, isShowInternalNodes);
-    }
+    }*/
 }
