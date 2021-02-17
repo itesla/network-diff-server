@@ -186,7 +186,7 @@ class NetworkDiffService {
                     .collect(Collectors.toList());
             LOGGER.info("network1={}, network2={}, vl={}, switchDiffs: {}, branchSideDiffs: {}, branchDiffs: {}",
                         network1Uuid, network2Uuid, vlId, switchDiffs, branchSideDiffs, Collections.emptyList());
-            return writeSVG(network1, vlId, switchDiffs, branchSideDiffs, Collections.emptyList());
+            return writeSVG(network1, vlId, switchDiffs, branchSideDiffs, branchSideDiffs);
         } catch (PowsyblException | IOException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         }
