@@ -304,7 +304,7 @@ class NetworkDiffService {
         return jsonDiff;
     }
 
-    public static void main1(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException {
         Network network1 = Importers.loadNetwork(Paths.get("/home/itesla/cases/public/528ffaa8-0602-4bb6-b2f1-214bdf133891/20200521_0930_SN5_FR0.xiidm"));
         Network network2 = Importers.loadNetwork(Paths.get("/home/itesla/cases/public/e0293dbe-a2ba-45f3-a292-0d2403e5b6b1/20200521_0930_FO5_FR0.xiidm"));
         NetworkDiffService dserv = new NetworkDiffService();

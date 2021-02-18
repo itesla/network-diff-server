@@ -1,0 +1,11 @@
+.sld-constant-color {stroke: black; fill: none}
+.sld-wire.sld-constant-color {stroke: black}
+.sld-wire.sld-constant-color-diff {stroke: red}
+.sld-line.sld-constant-color {stroke: yellow}
+.sld-node.sld-constant-color {stroke: none; fill: black}
+.sld-busbreaker-connection.sld-constant-color {stroke: black}
+.sld-busbar-section.sld-constant-color {stroke: black}
+.sld-disconnector.sld-constant-color {stroke: black}
+.sld-disconnector.sld-constant-color-diff {stroke: red}
+.sld-label {stroke: none; fill: black}
+.sld-two-wt.sld-constant-color-diff {stroke: red; fill: none}
