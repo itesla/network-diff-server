@@ -16,9 +16,12 @@ import com.powsybl.sld.svg.DefaultDiagramStyleProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 
-import static com.powsybl.sld.svg.DiagramStyles.escapeClassName;
+import static com.powsybl.sld.svg.DiagramStyles.*;
 
 /**
  *
@@ -39,11 +42,13 @@ public class DiffStyleProvider extends DefaultDiagramStyleProvider {
     private List<String> switchDiffs;
     private List<String> branchSideDiffs;
     private List<String> branchDiffs;
+    private String prefix;
 
-    public DiffStyleProvider(List<String> switchDiffs, List<String> branchSideDiffs, List<String> branchDiffs) {
+    public DiffStyleProvider(String prefix, List<String> switchDiffs, List<String> branchSideDiffs, List<String> branchDiffs) {
         this.switchDiffs = Objects.requireNonNull(switchDiffs);
         this.branchSideDiffs = Objects.requireNonNull(branchSideDiffs);
         this.branchDiffs = Objects.requireNonNull(branchDiffs);
+        this.prefix = prefix;
     }
 
     @Override
@@ -79,7 +84,16 @@ public class DiffStyleProvider extends DefaultDiagramStyleProvider {
     public Optional<String> getCssNodeStyleAttributes(Node node, boolean isShowInternalNodes) {
         Objects.requireNonNull(node);
 //        LOGGER.info("node: Id='{}', type='{}', componentType='{}', equipmentId='{}'", node.getId(), node.getType(), node.getComponentType(), node.getEquipmentId());
-        if (node instanceof FeederNode) {
+        StringBuilder style = new StringBuilder();
+        String className = escapeId(prefix + node.getId());
+        if (node.getComponentType().equals("NODE") && !isShowInternalNodes) {
+            style.append(".").append(className).append(" {stroke-opacity:0; fill-opacity:0; visibility: hidden;}");
+            return Optional.of(style.toString());
+        } else if (node.getType() == NodeType.SWITCH) {
+            style.append(".").append(className).append(" .open { visibility: ").append(node.isOpen() ? "visible;}" : "hidden;}");
+            style.append(".").append(className).append(" .closed { visibility: ").append(node.isOpen() ? "hidden;}" : "visible;}");
+            return Optional.of(style.toString());
+        } else if (node instanceof FeederNode) {
             String arrow1Color = DEFAULT_COLOR;
             String arrow2Color = DEFAULT_COLOR;
             FeederType nodeFeederType = ((FeederNode) node).getFeederType();
@@ -88,7 +102,8 @@ public class DiffStyleProvider extends DefaultDiagramStyleProvider {
                 arrow1Color = DIFF_COLOR;
                 arrow2Color = DIFF_COLOR;
             }
-            StringBuilder style = new StringBuilder();
+
+            style = new StringBuilder();
             style.append(ARROW1).append(escapeClassName(node.getId()))
                  .append(UP).append(" .arrow-up {stroke: " + arrow1Color + "; fill: " + arrow1Color + "; fill-opacity:1; visibility: visible;}");
             style.append(ARROW1).append(escapeClassName(node.getId()))
@@ -108,9 +123,9 @@ public class DiffStyleProvider extends DefaultDiagramStyleProvider {
                  .append(DOWN).append(" .arrow-down {stroke: " + arrow2Color + "; fill: " + arrow2Color + "; fill-opacity:1;  visibility: visible;}");
             style.append(ARROW2).append(escapeClassName(node.getId()))
                  .append(DOWN).append(" .arrow-up { stroke-opacity:0; fill-opacity:0; visibility: hidden;}");
-
             return Optional.of(style.toString());
+        } else {
+            return Optional.empty();
         }
-        return super.getCssNodeStyleAttributes(node, isShowInternalNodes);
     }
 }
