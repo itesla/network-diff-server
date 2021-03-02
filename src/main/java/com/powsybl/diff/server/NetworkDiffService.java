@@ -274,7 +274,7 @@ class NetworkDiffService {
         Objects.requireNonNull(substationId);
         try {
             String jsonDiff = diffSubstation(network1, network2, substationId);
-            LOGGER.info("$$ json diff: {}", jsonDiff);
+            LOGGER.debug("json diff: {}", jsonDiff);
             ObjectMapper objectMapper = new ObjectMapper();
             Map<String, Object> jsonMap = objectMapper.readValue(jsonDiff, new TypeReference<Map<String, Object>>() { });
             List<String> switchesDiff = (List<String>) ((List) jsonMap.get("diff.VoltageLevels")).stream()
@@ -307,11 +307,11 @@ class NetworkDiffService {
         Network network1 = Importers.loadNetwork(Paths.get("/home/itesla/cases/public/528ffaa8-0602-4bb6-b2f1-214bdf133891/20200521_0930_SN5_FR0.xiidm"));
         Network network2 = Importers.loadNetwork(Paths.get("/home/itesla/cases/public/e0293dbe-a2ba-45f3-a292-0d2403e5b6b1/20200521_0930_FO5_FR0.xiidm"));
         NetworkDiffService dserv = new NetworkDiffService();
-        //String subsId = "P.AND";
+        String subsId = "P.AND";
         //String subsId = "T.FRO";
         //String subsId = "AUSSO";
         //String subsId = "BISSO";
-        String subsId = "BRONS";
+        //String subsId = "BRONS";
         //String subsId = "FRENE";
         //String subsId = "ORELL";
         //String subsId = "S.BIS";

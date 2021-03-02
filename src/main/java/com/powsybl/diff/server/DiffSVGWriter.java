@@ -26,8 +26,6 @@ import static com.powsybl.sld.svg.DiagramStyles.*;
  */
 public class DiffSVGWriter extends DefaultSVGWriter {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(DiffSVGWriter.class);
-
     private List<String> vlDiffs;
     private List<String> branchDiffs;
 
@@ -39,7 +37,6 @@ public class DiffSVGWriter extends DefaultSVGWriter {
 
     @Override
     protected void insertArrowsAndLabels(String prefixId, String wireId, List<Double> points, Element root, FeederNode feederNode, GraphMetadata metadata, DiagramLabelProvider initProvider, boolean feederArrowSymmetry) {
-        LOGGER.info("-> *$*$*$*$*$*$ prefixId: {}, wireId: {}, root: {}, feederNode: {}, feederArrowSymmetry: {}", prefixId, wireId, root, feederNode.getId(), feederArrowSymmetry);
         InitialValue init = initProvider.getInitialValue(feederNode);
 
         boolean arrowSymmetry = feederNode.getDirection() == BusCell.Direction.TOP || feederArrowSymmetry;
@@ -53,6 +50,7 @@ public class DiffSVGWriter extends DefaultSVGWriter {
         int iArrow1 = arrowSymmetry ? 1 : 2;
         int iArrow2 = arrowSymmetry ? 2 : 1;
 
+        //diff specific: if the diff list contains this feeder id
         final boolean diffStyleOverrides = branchDiffs.contains(feederNode.getId());
 
         // we draw the arrow only if value 1 is present
@@ -91,12 +89,11 @@ public class DiffSVGWriter extends DefaultSVGWriter {
         List<String> styles = new ArrayList<>(3);
         componentLibrary.getComponentStyleClass(ARROW).ifPresent(styles::add);
 
+        //diff specific: set the style suffix
         String diffSuffix = isdiffStyleOverrides ? "-diff2" : "-diff1";
         styles.add(iArrow == 1 ? ARROW_ACTIVE_CLASS + diffSuffix : ARROW_REACTIVE_CLASS + diffSuffix);
         dir.ifPresent(direction -> styles.add(direction == DiagramLabelProvider.Direction.UP ? UP_CLASS : DOWN_CLASS));
         g.setAttribute(CLASS, String.join(" ", styles));
-
-        LOGGER.info("$££$£$£$£$£ **** {} ,  {}, {}", wireId, styles, metadata);
 
         labelL.ifPresent(s -> {
             Element labelLeft = createLabelElement(s, -LABEL_OFFSET, shY, 0, g);
