@@ -6,10 +6,13 @@
  */
 package com.powsybl.diff.server;
 
-import com.powsybl.iidm.network.Network;
+import com.powsybl.iidm.network.*;
 import com.powsybl.sld.layout.LayoutParameters;
 import com.powsybl.sld.library.ComponentLibrary;
+import com.powsybl.sld.model.*;
 import com.powsybl.sld.svg.DefaultDiagramLabelProvider;
+import com.powsybl.sld.svg.InitialValue;
+import org.apache.commons.math3.util.Precision;
 
 import java.util.Objects;
 
@@ -26,7 +29,7 @@ public class DiffDiagramLabelProvider extends DefaultDiagramLabelProvider {
         this.network = Objects.requireNonNull(net);
     }
 
-/*    @Override
+    @Override
     public InitialValue getInitialValue(Node node) {
         Objects.requireNonNull(node);
         switch (node.getType()) {
@@ -91,5 +94,5 @@ public class DiffDiagramLabelProvider extends DefaultDiagramLabelProvider {
             return buildInitialValue(transformer.getTerminal(side));
         }
         return new InitialValue(null, null, null, null, null, null);
-    }*/
+    }
 }

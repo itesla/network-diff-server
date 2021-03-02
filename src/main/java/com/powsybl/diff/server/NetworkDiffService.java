@@ -10,7 +10,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.iidm.diff.*;
-import com.powsybl.iidm.import_.Importers;
 import com.powsybl.iidm.network.*;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.sld.GraphBuilder;
@@ -36,8 +35,6 @@ import org.springframework.web.server.ResponseStatusException;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.UncheckedIOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -215,21 +212,21 @@ class NetworkDiffService {
              StringWriter jsonWriter = new StringWriter()) {
             DiagramStyleProvider styleProvider = new DiffStyleProvider(vlDiffs, vlDiffs, branchDiffs);
             LayoutParameters layoutParameters = new LayoutParameters();
-
+/*
             layoutParameters.setCellWidth(25);
-            layoutParameters.setShowGrid(true);
+//            layoutParameters.setShowGrid(true);
             layoutParameters.setHorizontalSubstationPadding(5);
             layoutParameters.setAdaptCellHeightToContent(true);
             layoutParameters.setScaleFactor(1);
+*/
             layoutParameters.setCssInternal(true);
-
             ComponentLibrary componentLibrary = new ResourcesComponentLibrary("/ConvergenceLibrary");
             DiagramLabelProvider initProvider = new DiffDiagramLabelProvider(network, componentLibrary, layoutParameters);
             GraphBuilder graphBuilder = new NetworkGraphBuilder(network);
             SubstationDiagram diagram = SubstationDiagram.build(graphBuilder, substationId, new HorizontalSubstationLayoutFactory(),
                     new SmartVoltageLevelLayoutFactory(network), false);
             diagram.writeSvg("",
-                    new DefaultSVGWriter(componentLibrary, layoutParameters),
+                    new DiffSVGWriter(componentLibrary, layoutParameters, vlDiffs, branchDiffs),
                     initProvider,
                     styleProvider,
                     svgWriter,
@@ -277,6 +274,7 @@ class NetworkDiffService {
         Objects.requireNonNull(substationId);
         try {
             String jsonDiff = diffSubstation(network1, network2, substationId);
+            LOGGER.info("$$ json diff: {}", jsonDiff);
             ObjectMapper objectMapper = new ObjectMapper();
             Map<String, Object> jsonMap = objectMapper.readValue(jsonDiff, new TypeReference<Map<String, Object>>() { });
             List<String> switchesDiff = (List<String>) ((List) jsonMap.get("diff.VoltageLevels")).stream()
@@ -304,10 +302,20 @@ class NetworkDiffService {
         return jsonDiff;
     }
 
+/*
     public static void main(String[] args) throws IOException {
         Network network1 = Importers.loadNetwork(Paths.get("/home/itesla/cases/public/528ffaa8-0602-4bb6-b2f1-214bdf133891/20200521_0930_SN5_FR0.xiidm"));
         Network network2 = Importers.loadNetwork(Paths.get("/home/itesla/cases/public/e0293dbe-a2ba-45f3-a292-0d2403e5b6b1/20200521_0930_FO5_FR0.xiidm"));
         NetworkDiffService dserv = new NetworkDiffService();
-        Files.write(Paths.get("/tmp/outsvg1_v19.svg"), dserv.getSubstationSvgDiff(network1, network2, "P.AND").getBytes());
+        //String subsId = "P.AND";
+        //String subsId = "T.FRO";
+        //String subsId = "AUSSO";
+        //String subsId = "BISSO";
+        String subsId = "BRONS";
+        //String subsId = "FRENE";
+        //String subsId = "ORELL";
+        //String subsId = "S.BIS";
+        Files.write(Paths.get("/mnt/Downloads/2021_02_FEBRUARY/RTE/20200301/outsvg1_v19.svg"), dserv.getSubstationSvgDiff(network1, network2, subsId).getBytes());
     }
+*/
 }
