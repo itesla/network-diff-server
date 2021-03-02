@@ -9,8 +9,6 @@ import com.powsybl.sld.svg.DefaultSVGWriter;
 import com.powsybl.sld.svg.DiagramLabelProvider;
 import com.powsybl.sld.svg.GraphMetadata;
 import com.powsybl.sld.svg.InitialValue;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
 
 import java.util.ArrayList;
