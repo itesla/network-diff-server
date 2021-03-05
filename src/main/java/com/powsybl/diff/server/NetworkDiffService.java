@@ -51,6 +51,33 @@ class NetworkDiffService {
 
     DiffConfig config = new DiffConfig(DiffConfig.EPSILON_DEFAULT, DiffConfig.FILTER_DIFF_DEFAULT);
 
+    class DiffData {
+        final List<String> switchesDiff;
+        final List<String> branchesDiff;
+
+        DiffData(String jsonDiff) throws IOException {
+            ObjectMapper objectMapper = new ObjectMapper();
+            Map<String, Object> jsonMap = objectMapper.readValue(jsonDiff, new TypeReference<Map<String, Object>>() { });
+            switchesDiff = (List<String>) ((List) jsonMap.get("diff.VoltageLevels")).stream()
+                    .map(t -> ((Map) t).get("vl.switchesStatus-delta"))
+                    .flatMap(t -> ((List<String>) t).stream())
+                    .collect(Collectors.toList());
+            branchesDiff = (List<String>) ((List) jsonMap.get("diff.Branches")).stream()
+                    .map(t -> ((Map) t).get("branch.terminalStatus-delta"))
+                    .flatMap(t -> ((List<String>) t).stream())
+                    .collect(Collectors.toList());
+        }
+
+        public List<String> getSwitchesIds() {
+            return switchesDiff;
+        }
+
+        public List<String> getBranchesIds() {
+            return branchesDiff;
+        }
+
+    }
+
     private Network getNetwork(UUID networkUuid) {
         try {
             return networkStoreService.getNetwork(networkUuid);
@@ -123,16 +150,9 @@ class NetworkDiffService {
         Objects.requireNonNull(vlId);
         try {
             String jsonDiff = diffVoltageLevel(network1, network2, vlId);
-            ObjectMapper objectMapper = new ObjectMapper();
-            Map<String, Object> jsonMap = objectMapper.readValue(jsonDiff, new TypeReference<Map<String, Object>>() { });
-            List<String> switchesDiff = (List<String>) ((List) jsonMap.get("diff.VoltageLevels")).stream()
-                    .map(t -> ((Map) t).get("vl.switchesStatus-delta"))
-                    .flatMap(t -> ((List<String>) t).stream())
-                    .collect(Collectors.toList());
-            List<String> branchesDiff = (List<String>) ((List) jsonMap.get("diff.Branches")).stream()
-                    .map(t -> ((Map) t).get("branch.terminalStatus-delta"))
-                    .flatMap(t -> ((List<String>) t).stream())
-                    .collect(Collectors.toList());
+            DiffData diffData = new DiffData(jsonDiff);
+            List<String> switchesDiff = diffData.getSwitchesIds();
+            List<String> branchesDiff = diffData.getBranchesIds();
             LOGGER.info("switchesDiff: {}, branchesDiff: {}", switchesDiff, branchesDiff);
             return writeVoltageLevelSvg(network1, vlId, switchesDiff, branchesDiff);
         } catch (PowsyblException | IOException e) {
@@ -188,16 +208,9 @@ class NetworkDiffService {
         Objects.requireNonNull(substationId);
         try {
             String jsonDiff = diffSubstation(network1, network2, substationId);
-            ObjectMapper objectMapper = new ObjectMapper();
-            Map<String, Object> jsonMap = objectMapper.readValue(jsonDiff, new TypeReference<Map<String, Object>>() { });
-            List<String> switchesDiff = (List<String>) ((List) jsonMap.get("diff.VoltageLevels")).stream()
-                    .map(t -> ((Map) t).get("vl.switchesStatus-delta"))
-                    .flatMap(t -> ((List<String>) t).stream())
-                    .collect(Collectors.toList());
-            List<String> branchesDiff = (List<String>) ((List) jsonMap.get("diff.Branches")).stream()
-                    .map(t -> ((Map) t).get("branch.terminalStatus-delta"))
-                    .flatMap(t -> ((List<String>) t).stream())
-                    .collect(Collectors.toList());
+            DiffData diffData = new DiffData(jsonDiff);
+            List<String> switchesDiff = diffData.getSwitchesIds();
+            List<String> branchesDiff = diffData.getBranchesIds();
             LOGGER.info("switchesDiff: {}, branchesDiff: {}", switchesDiff, branchesDiff);
             return writeSubstationSvg(network1, substationId, switchesDiff, branchesDiff);
         } catch (PowsyblException | IOException e) {
@@ -269,29 +282,4 @@ class NetworkDiffService {
         String jsonDiff = diffVoltageLevels(network1, network2, voltageLevels, branches);
         return jsonDiff;
     }
-
-/*    public static void main(String[] args) throws IOException {
-        Network network1 = Importers.loadNetwork(Paths.get("/home/itesla/cases/public/528ffaa8-0602-4bb6-b2f1-214bdf133891/20200521_0930_SN5_FR0.xiidm"));
-        Network network2 = Importers.loadNetwork(Paths.get("/home/itesla/cases/public/e0293dbe-a2ba-45f3-a292-0d2403e5b6b1/20200521_0930_FO5_FR0.xiidm"));
-        NetworkDiffService dserv = new NetworkDiffService();
-        String subsId = "P.AND";
-        //String subsId = "T.FRO";
-        //String subsId = "AUSSO";
-        //String subsId = "BISSO";
-        //String subsId = "BRONS";
-        //String subsId = "FRENE";
-        //String subsId = "ORELL";
-        //String subsId = "S.BIS";
-        Files.write(Paths.get("/mnt/Downloads/2021_02_FEBRUARY/RTE/20200301/outsvg1_v19.svg"), dserv.getSubstationSvgDiff(network1, network2, subsId).getBytes());
-    }*/
-
-
-/*    public static void main(String[] args) throws IOException {
-        Network network1 = Importers.loadNetwork(Paths.get("/home/itesla/cases/public/528ffaa8-0602-4bb6-b2f1-214bdf133891/20200521_0930_SN5_FR0.xiidm"));
-        Network network2 = Importers.loadNetwork(Paths.get("/home/itesla/cases/public/e0293dbe-a2ba-45f3-a292-0d2403e5b6b1/20200521_0930_FO5_FR0.xiidm"));
-        NetworkDiffService dserv = new NetworkDiffService();
-        String vlId = "P.ANDP6";
-        Files.write(Paths.get("/mnt/Downloads/2021_02_FEBRUARY/RTE/20200301/outsvg1_v19.svg"), dserv.getVoltageLevelSvgDiff(network1, network2, vlId).getBytes());
-    }*/
-
 }
