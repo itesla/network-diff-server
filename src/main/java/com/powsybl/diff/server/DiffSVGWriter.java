@@ -14,6 +14,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
+import static com.powsybl.diff.server.DiffStyleProvider.CHANGED_SUFFIX;
+import static com.powsybl.diff.server.DiffStyleProvider.UNCHANGED_SUFFIX;
 import static com.powsybl.sld.svg.DiagramStyles.ARROW_ACTIVE_CLASS;
 import static com.powsybl.sld.svg.DiagramStyles.ARROW_REACTIVE_CLASS;
 
@@ -21,9 +23,6 @@ import static com.powsybl.sld.svg.DiagramStyles.ARROW_REACTIVE_CLASS;
  * @author Christian Biasuzzi <christian.biasuzzi@techrain.eu>
  */
 public class DiffSVGWriter extends DefaultSVGWriter {
-
-    public static final String DIFFERENT_SUFFIX = "-diff1";
-    public static final String SAME_SUFFIX = "-diff2";
 
     private final List<String> vlDiffs;
     private final List<String> branchDiffs;
@@ -39,7 +38,7 @@ public class DiffSVGWriter extends DefaultSVGWriter {
         super.insertArrowsAndLabels(prefixId, wireId, points, root, feederNode, metadata, initProvider, feederArrowSymmetry);
 
         //replace arrows css classes with the diff ones
-        String diffSuffix = branchDiffs.contains(feederNode.getId()) ? SAME_SUFFIX : DIFFERENT_SUFFIX;
+        String diffSuffix = branchDiffs.contains(feederNode.getId()) ? CHANGED_SUFFIX : UNCHANGED_SUFFIX;
         for (int i = 0; i < root.getElementsByTagName(GROUP).getLength(); i++) {
             Node gNode = root.getElementsByTagName(GROUP).item(i);
             if (gNode instanceof Element) {

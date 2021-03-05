@@ -6,7 +6,6 @@
  */
 package com.powsybl.diff.server;
 
-import java.util.Arrays;
 import java.util.Map;
 import java.util.UUID;
 
@@ -50,7 +49,7 @@ public class NetworkDiffController {
             @ApiParam(value = "Network2 UUID") @PathVariable("network2Uuid") UUID network2Uuid,
             @ApiParam(value = "Voltage level ID") @PathVariable("vlId") String vlId) {
 
-        String jsonDiff = networkDiffService.diff(network1Uuid, network2Uuid, vlId);
+        String jsonDiff = networkDiffService.diffVoltageLevel(network1Uuid, network2Uuid, vlId);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(jsonDiff);
     }
 
@@ -61,17 +60,6 @@ public class NetworkDiffController {
 
         Map<UUID, String> netIds = networkDiffService.getNetworkIds();
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(netIds);
-    }
-
-    @GetMapping(value = "/svg/network/{network1Uuid}/vl/{vlId}/{diffs}")
-    @ApiOperation(value = "get voltage level svg diagram", produces = "image/svg+xml")
-    @ApiResponses(value = {@ApiResponse(code = 200, message = "network diff")})
-    public ResponseEntity<String> getSvg(
-            @ApiParam(value = "Network1 UUID") @PathVariable("network1Uuid") UUID network1Uuid,
-            @ApiParam(value = "Voltage level ID") @PathVariable("vlId") String vlId,
-            @ApiParam(value = "Swithes diffs") @PathVariable("diffs") String diffs) {
-        String svg = networkDiffService.getVoltageLevelSvg(network1Uuid, vlId, Arrays.asList(diffs.split(",")));
-        return ResponseEntity.ok().contentType(MediaType.valueOf("image/svg+xml")).body(svg);
     }
 
     @GetMapping(value = "/networks/{network1Uuid}/svgdiff/{network2Uuid}/vl/{vlId}")
