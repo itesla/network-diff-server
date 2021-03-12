@@ -6,126 +6,87 @@
  */
 package com.powsybl.diff.server;
 
-import com.powsybl.sld.library.ComponentSize;
+import com.powsybl.sld.library.ComponentLibrary;
+import com.powsybl.sld.library.ComponentTypeName;
 import com.powsybl.sld.model.Edge;
-import com.powsybl.sld.model.FeederNode;
-import com.powsybl.sld.model.FeederType;
 import com.powsybl.sld.model.Node;
-import com.powsybl.sld.model.Node.NodeType;
 import com.powsybl.sld.svg.DefaultDiagramStyleProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import static com.powsybl.sld.svg.DiagramStyles.*;
+import static com.powsybl.sld.svg.DiagramStyles.CONSTANT_COLOR_CLASS;
 
 /**
- *
  * @author Giovanni Ferrari <giovanni.ferrari@techrain.eu>
+ * @author Christian Biasuzzi <christian.biasuzzi@techrain.eu>
  */
 public class DiffStyleProvider extends DefaultDiagramStyleProvider {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DiffStyleProvider.class);
 
-    private static final String ARROW1 = ".ARROW1_";
-    private static final String ARROW2 = ".ARROW2_";
-    private static final String UP = "_UP";
-    private static final String DOWN = "_DOWN";
-
-    private static final String DIFF_COLOR = "red";
-    private static final String DEFAULT_COLOR = "black";
+    public static final String UNCHANGED_SUFFIX = "-diff1";
+    public static final String CHANGED_SUFFIX = "-diff2";
 
     private List<String> switchDiffs;
     private List<String> branchSideDiffs;
     private List<String> branchDiffs;
-    private String prefix;
 
-    public DiffStyleProvider(String prefix, List<String> switchDiffs, List<String> branchSideDiffs, List<String> branchDiffs) {
+    public DiffStyleProvider(List<String> switchDiffs, List<String> branchSideDiffs, List<String> branchDiffs) {
         this.switchDiffs = Objects.requireNonNull(switchDiffs);
         this.branchSideDiffs = Objects.requireNonNull(branchSideDiffs);
         this.branchDiffs = Objects.requireNonNull(branchDiffs);
-        this.prefix = prefix;
+        LOGGER.debug("switchDiffs: {}", branchDiffs);
+        LOGGER.debug("branchSideDiffs: {}", branchSideDiffs);
+        LOGGER.debug("branchDiffs: {}", branchDiffs);
     }
 
     @Override
-    public Map<String, String> getSvgNodeStyleAttributes(Node node, ComponentSize size, String subComponentName, boolean isShowInternalNodes) {
-//        LOGGER.info("** node: Id='{}', type='{}', componentType='{}', equipmentId='{}'", node.getId(), node.getType(), node.getComponentType(), node.getEquipmentId());
-        Map<String, String> style = super.getSvgNodeStyleAttributes(node, size, subComponentName, isShowInternalNodes);
-        String nodeColor = DEFAULT_COLOR;
-        if (NodeType.SWITCH.equals(node.getType()) && switchDiffs.contains(node.getId())) {
-            nodeColor = DIFF_COLOR;
+    public List<String> getSvgNodeStyles(Node node, ComponentLibrary componentLibrary, boolean showInternalNodes) {
+        List<String> nodeStyles = super.getSvgNodeStyles(node, componentLibrary, showInternalNodes);
+        //LOGGER.debug("node before: id {} node_type {} componenttype {}, styles {}", node.getId(), node.getType(), node.getComponentType(), nodeStyles);
+        Collections.replaceAll(nodeStyles, CONSTANT_COLOR_CLASS, CONSTANT_COLOR_CLASS + UNCHANGED_SUFFIX);
+
+        if (Node.NodeType.SWITCH.equals(node.getType()) && switchDiffs.contains(node.getId())) {
+            Collections.replaceAll(nodeStyles, CONSTANT_COLOR_CLASS + UNCHANGED_SUFFIX, CONSTANT_COLOR_CLASS + CHANGED_SUFFIX);
+        } else if (ComponentTypeName.TWO_WINDINGS_TRANSFORMER.equals(node.getComponentType())) {
+            List<String> edgesNodesIds = node.getAdjacentEdges().stream()
+                    .map(e -> e.getNodes().stream().map(n -> n.getId())
+                            .filter(nId -> !nId.equals(node.getId()))
+                            .collect(Collectors.toList()))
+                    .flatMap(List::stream)
+                    .collect(Collectors.toList());
+            if (branchDiffs.containsAll(edgesNodesIds) || branchDiffs.contains(node.getId())) {
+                Collections.replaceAll(nodeStyles, CONSTANT_COLOR_CLASS + UNCHANGED_SUFFIX, CONSTANT_COLOR_CLASS + CHANGED_SUFFIX);
+            }
         }
-        if ("TWO_WINDINGS_TRANSFORMER".equals(node.getComponentType()) && branchDiffs.contains(node.getId())) {
-            nodeColor = DIFF_COLOR;
-        }
-        style.put("stroke", nodeColor);
-        return style;
+
+        //LOGGER.debug("node after: id {} node_type {} componenttype {}, styles {}", node.getId(), node.getType(), node.getComponentType(), nodeStyles);
+        return nodeStyles;
     }
 
     @Override
-    public Map<String, String> getSvgWireStyleAttributes(Edge edge, boolean highlightLineState) {
-        Map<String, String> style = super.getSvgWireStyleAttributes(edge, highlightLineState);
+    public List<String> getSvgWireStyles(Edge edge, boolean highlightLineState) {
+        List<String> style = super.getSvgWireStyles(edge, highlightLineState);
+        //LOGGER.debug("edge before: Id1='{}', id2='{}', styles= '{}'", edge.getNode1().getId(), edge.getNode2().getId(), style);
         Node node1 = edge.getNode1();
         Node node2 = edge.getNode2();
-        String wireColor = DEFAULT_COLOR;
-        if (branchSideDiffs.contains(node1.getId()) || branchSideDiffs.contains(node2.getId())) {
-            wireColor = DIFF_COLOR;
+        if (branchDiffs.contains(node1.getId()) || branchDiffs.contains(node2.getId())) {
+            Collections.replaceAll(style, CONSTANT_COLOR_CLASS, CONSTANT_COLOR_CLASS + CHANGED_SUFFIX);
+        } else {
+            Collections.replaceAll(style, CONSTANT_COLOR_CLASS, CONSTANT_COLOR_CLASS + UNCHANGED_SUFFIX);
         }
-        style.put("stroke", wireColor);
-        style.put("stroke-width", "1");
+        //LOGGER.debug("edge after:  Id1='{}', id2='{}', styles= '{}'", edge.getNode1().getId(), edge.getNode2().getId(), style);
         return style;
     }
 
     @Override
-    public Optional<String> getCssNodeStyleAttributes(Node node, boolean isShowInternalNodes) {
-        Objects.requireNonNull(node);
-//        LOGGER.info("node: Id='{}', type='{}', componentType='{}', equipmentId='{}'", node.getId(), node.getType(), node.getComponentType(), node.getEquipmentId());
-        StringBuilder style = new StringBuilder();
-        String className = escapeId(prefix + node.getId());
-        if (node.getComponentType().equals("NODE") && !isShowInternalNodes) {
-            style.append(".").append(className).append(" {stroke-opacity:0; fill-opacity:0; visibility: hidden;}");
-            return Optional.of(style.toString());
-        } else if (node.getType() == NodeType.SWITCH) {
-            style.append(".").append(className).append(" .open { visibility: ").append(node.isOpen() ? "visible;}" : "hidden;}");
-            style.append(".").append(className).append(" .closed { visibility: ").append(node.isOpen() ? "hidden;}" : "visible;}");
-            return Optional.of(style.toString());
-        } else if (node instanceof FeederNode) {
-            String arrow1Color = DEFAULT_COLOR;
-            String arrow2Color = DEFAULT_COLOR;
-            FeederType nodeFeederType = ((FeederNode) node).getFeederType();
-            if ((FeederType.BRANCH.equals(nodeFeederType) || FeederType.TWO_WINDINGS_TRANSFORMER_LEG.equals(nodeFeederType))
-                && branchSideDiffs.contains(node.getId())) {
-                arrow1Color = DIFF_COLOR;
-                arrow2Color = DIFF_COLOR;
-            }
-
-            style = new StringBuilder();
-            style.append(ARROW1).append(escapeClassName(node.getId()))
-                 .append(UP).append(" .arrow-up {stroke: " + arrow1Color + "; fill: " + arrow1Color + "; fill-opacity:1; visibility: visible;}");
-            style.append(ARROW1).append(escapeClassName(node.getId()))
-                 .append(UP).append(" .arrow-down { stroke-opacity:0; fill-opacity:0; visibility: hidden;}");
-
-            style.append(ARROW1).append(escapeClassName(node.getId()))
-                 .append(DOWN).append(" .arrow-down {stroke: " + arrow1Color + "; fill: " + arrow1Color + "; fill-opacity:1;  visibility: visible;}");
-            style.append(ARROW1).append(escapeClassName(node.getId()))
-                 .append(DOWN).append(" .arrow-up { stroke-opacity:0; fill-opacity:0; visibility: hidden;}");
-
-            style.append(ARROW2).append(escapeClassName(node.getId()))
-                 .append(UP).append(" .arrow-up {stroke: " + arrow2Color + "; fill: " + arrow2Color + "; fill-opacity:1; visibility: visible;}");
-            style.append(ARROW2).append(escapeClassName(node.getId()))
-                 .append(UP).append(" .arrow-down { stroke-opacity:0; fill-opacity:0; visibility: hidden;}");
-
-            style.append(ARROW2).append(escapeClassName(node.getId()))
-                 .append(DOWN).append(" .arrow-down {stroke: " + arrow2Color + "; fill: " + arrow2Color + "; fill-opacity:1;  visibility: visible;}");
-            style.append(ARROW2).append(escapeClassName(node.getId()))
-                 .append(DOWN).append(" .arrow-up { stroke-opacity:0; fill-opacity:0; visibility: hidden;}");
-            return Optional.of(style.toString());
-        } else {
-            return Optional.empty();
-        }
+    public List<String> getCssFilenames() {
+        return Stream.concat(super.getCssFilenames().stream(), Stream.of("diffs.css")).collect(Collectors.toList());
     }
 }
