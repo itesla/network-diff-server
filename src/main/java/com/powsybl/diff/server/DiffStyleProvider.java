@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2020, RTE (http://www.rte-france.com)
+ * Copyright (c) 2020-2021, RTE (http://www.rte-france.com)
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -9,6 +9,7 @@ package com.powsybl.diff.server;
 import com.powsybl.sld.library.ComponentLibrary;
 import com.powsybl.sld.library.ComponentTypeName;
 import com.powsybl.sld.model.Edge;
+import com.powsybl.sld.model.FeederNode;
 import com.powsybl.sld.model.Node;
 import com.powsybl.sld.svg.DefaultDiagramStyleProvider;
 import org.slf4j.Logger;
@@ -20,13 +21,15 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static com.powsybl.sld.svg.DiagramStyles.ARROW_ACTIVE_CLASS;
+import static com.powsybl.sld.svg.DiagramStyles.ARROW_REACTIVE_CLASS;
 import static com.powsybl.sld.svg.DiagramStyles.CONSTANT_COLOR_CLASS;
 
 /**
  * @author Giovanni Ferrari <giovanni.ferrari@techrain.eu>
  * @author Christian Biasuzzi <christian.biasuzzi@techrain.eu>
  */
-public class DiffStyleProvider extends DefaultDiagramStyleProvider {
+public class DiffStyleProvider extends DefaultDiagramStyleProvider implements ArrowsStyleProvider {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DiffStyleProvider.class);
 
@@ -89,4 +92,15 @@ public class DiffStyleProvider extends DefaultDiagramStyleProvider {
     public List<String> getCssFilenames() {
         return Stream.concat(super.getCssFilenames().stream(), Stream.of("diffs.css")).collect(Collectors.toList());
     }
+
+    public String getArrowsActiveStyle(FeederNode feederNode, ComponentLibrary componentLibrary) {
+        String diffSuffix = branchDiffs.contains(feederNode.getId()) ? CHANGED_SUFFIX : UNCHANGED_SUFFIX;
+        return ARROW_ACTIVE_CLASS + diffSuffix;
+    }
+
+    public String getArrowsReactiveStyle(FeederNode feederNode, ComponentLibrary componentLibrary) {
+        String diffSuffix = branchDiffs.contains(feederNode.getId()) ? CHANGED_SUFFIX : UNCHANGED_SUFFIX;
+        return ARROW_REACTIVE_CLASS + diffSuffix;
+    }
+
 }

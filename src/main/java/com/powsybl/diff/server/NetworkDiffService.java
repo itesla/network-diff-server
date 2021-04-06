@@ -1,16 +1,44 @@
 /**
- * Copyright (c) 2020, RTE (http://www.rte-france.com)
+ * Copyright (c) 2020-2021, RTE (http://www.rte-france.com)
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 package com.powsybl.diff.server;
 
+import java.io.IOException;
+import java.io.StringWriter;
+import java.io.UncheckedIOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.commons.PowsyblException;
-import com.powsybl.iidm.diff.*;
-import com.powsybl.iidm.network.*;
+import com.powsybl.iidm.diff.DiffConfig;
+import com.powsybl.iidm.diff.DiffEquipment;
+import com.powsybl.iidm.diff.DiffEquipmentType;
+import com.powsybl.iidm.diff.NetworkDiff;
+import com.powsybl.iidm.diff.NetworkDiffResults;
+import com.powsybl.iidm.network.Branch;
+import com.powsybl.iidm.network.Line;
+import com.powsybl.iidm.network.Network;
+import com.powsybl.iidm.network.Substation;
+import com.powsybl.iidm.network.TwoWindingsTransformer;
+import com.powsybl.iidm.network.VoltageLevel;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.sld.GraphBuilder;
 import com.powsybl.sld.NetworkGraphBuilder;
@@ -22,20 +50,6 @@ import com.powsybl.sld.layout.SmartVoltageLevelLayoutFactory;
 import com.powsybl.sld.library.ComponentLibrary;
 import com.powsybl.sld.library.ResourcesComponentLibrary;
 import com.powsybl.sld.svg.DiagramLabelProvider;
-import com.powsybl.sld.svg.DiagramStyleProvider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
-
-import java.io.IOException;
-import java.io.StringWriter;
-import java.io.UncheckedIOException;
-import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * @author Christian Biasuzzi <christian.biasuzzi@techrain.eu>
@@ -179,7 +193,7 @@ class NetworkDiffService {
         try (StringWriter svgWriter = new StringWriter();
              StringWriter metadataWriter = new StringWriter();
              StringWriter jsonWriter = new StringWriter()) {
-            DiagramStyleProvider styleProvider = new DiffStyleProvider(vlDiffs, vlDiffs, branchDiffs);
+            ArrowsStyleProvider styleProvider = new DiffStyleProvider(vlDiffs, vlDiffs, branchDiffs);
             LayoutParameters layoutParameters = new LayoutParameters();
             layoutParameters.setCssInternal(true);
             ComponentLibrary componentLibrary = new ResourcesComponentLibrary("/ConvergenceLibrary");
@@ -187,7 +201,7 @@ class NetworkDiffService {
             GraphBuilder graphBuilder = new NetworkGraphBuilder(network);
             VoltageLevelDiagram diagram = VoltageLevelDiagram.build(graphBuilder, vlId, new SmartVoltageLevelLayoutFactory(network), false);
             diagram.writeSvg("",
-                    new DiffSVGWriter(componentLibrary, layoutParameters, vlDiffs, branchDiffs),
+                    new DiffSVGWriter(componentLibrary, layoutParameters, styleProvider),
                     initProvider,
                     styleProvider,
                     svgWriter,
@@ -241,7 +255,7 @@ class NetworkDiffService {
         try (StringWriter svgWriter = new StringWriter();
              StringWriter metadataWriter = new StringWriter();
              StringWriter jsonWriter = new StringWriter()) {
-            DiagramStyleProvider styleProvider = new DiffStyleProvider(vlDiffs, vlDiffs, branchDiffs);
+            ArrowsStyleProvider styleProvider = new DiffStyleProvider(vlDiffs, vlDiffs, branchDiffs);
             LayoutParameters layoutParameters = new LayoutParameters();
             layoutParameters.setCssInternal(true);
             ComponentLibrary componentLibrary = new ResourcesComponentLibrary("/ConvergenceLibrary");
@@ -250,7 +264,7 @@ class NetworkDiffService {
             SubstationDiagram diagram = SubstationDiagram.build(graphBuilder, substationId, new HorizontalSubstationLayoutFactory(),
                     new SmartVoltageLevelLayoutFactory(network), false);
             diagram.writeSvg("",
-                    new DiffSVGWriter(componentLibrary, layoutParameters, vlDiffs, branchDiffs),
+                    new DiffSVGWriter(componentLibrary, layoutParameters, styleProvider),
                     initProvider,
                     styleProvider,
                     svgWriter,
