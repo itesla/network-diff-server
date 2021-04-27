@@ -36,17 +36,10 @@ public class DiffStyleProvider extends DefaultDiagramStyleProvider implements Ar
     public static final String UNCHANGED_SUFFIX = "-diff1";
     public static final String CHANGED_SUFFIX = "-diff2";
 
-    private List<String> switchDiffs;
-    private List<String> branchSideDiffs;
-    private List<String> branchDiffs;
+    final DiffData diffData;
 
-    public DiffStyleProvider(List<String> switchDiffs, List<String> branchSideDiffs, List<String> branchDiffs) {
-        this.switchDiffs = Objects.requireNonNull(switchDiffs);
-        this.branchSideDiffs = Objects.requireNonNull(branchSideDiffs);
-        this.branchDiffs = Objects.requireNonNull(branchDiffs);
-        LOGGER.debug("switchDiffs: {}", branchDiffs);
-        LOGGER.debug("branchSideDiffs: {}", branchSideDiffs);
-        LOGGER.debug("branchDiffs: {}", branchDiffs);
+    public DiffStyleProvider(DiffData diffData) {
+        this.diffData = Objects.requireNonNull(diffData);
     }
 
     @Override
@@ -55,7 +48,7 @@ public class DiffStyleProvider extends DefaultDiagramStyleProvider implements Ar
         //LOGGER.debug("node before: id {} node_type {} componenttype {}, styles {}", node.getId(), node.getType(), node.getComponentType(), nodeStyles);
         Collections.replaceAll(nodeStyles, CONSTANT_COLOR_CLASS, CONSTANT_COLOR_CLASS + UNCHANGED_SUFFIX);
 
-        if (Node.NodeType.SWITCH.equals(node.getType()) && switchDiffs.contains(node.getId())) {
+        if (Node.NodeType.SWITCH.equals(node.getType()) && diffData.getSwitchesIds().contains(node.getId())) {
             Collections.replaceAll(nodeStyles, CONSTANT_COLOR_CLASS + UNCHANGED_SUFFIX, CONSTANT_COLOR_CLASS + CHANGED_SUFFIX);
         } else if (ComponentTypeName.TWO_WINDINGS_TRANSFORMER.equals(node.getComponentType())) {
             List<String> edgesNodesIds = node.getAdjacentEdges().stream()
@@ -64,7 +57,7 @@ public class DiffStyleProvider extends DefaultDiagramStyleProvider implements Ar
                             .collect(Collectors.toList()))
                     .flatMap(List::stream)
                     .collect(Collectors.toList());
-            if (branchDiffs.containsAll(edgesNodesIds) || branchDiffs.contains(node.getId())) {
+            if (diffData.getBranchesIds().containsAll(edgesNodesIds) || diffData.getBranchesIds().contains(node.getId())) {
                 Collections.replaceAll(nodeStyles, CONSTANT_COLOR_CLASS + UNCHANGED_SUFFIX, CONSTANT_COLOR_CLASS + CHANGED_SUFFIX);
             }
         }
@@ -79,7 +72,7 @@ public class DiffStyleProvider extends DefaultDiagramStyleProvider implements Ar
         //LOGGER.debug("edge before: Id1='{}', id2='{}', styles= '{}'", edge.getNode1().getId(), edge.getNode2().getId(), style);
         Node node1 = edge.getNode1();
         Node node2 = edge.getNode2();
-        if (branchDiffs.contains(node1.getId()) || branchDiffs.contains(node2.getId())) {
+        if (diffData.getBranchesIds().contains(node1.getId()) || diffData.getBranchesIds().contains(node2.getId())) {
             Collections.replaceAll(style, CONSTANT_COLOR_CLASS, CONSTANT_COLOR_CLASS + CHANGED_SUFFIX);
         } else {
             Collections.replaceAll(style, CONSTANT_COLOR_CLASS, CONSTANT_COLOR_CLASS + UNCHANGED_SUFFIX);
@@ -94,12 +87,12 @@ public class DiffStyleProvider extends DefaultDiagramStyleProvider implements Ar
     }
 
     public String getArrowsActiveStyle(FeederNode feederNode, ComponentLibrary componentLibrary) {
-        String diffSuffix = branchDiffs.contains(feederNode.getId()) ? CHANGED_SUFFIX : UNCHANGED_SUFFIX;
+        String diffSuffix = diffData.getBranchesIds().contains(feederNode.getId()) ? CHANGED_SUFFIX : UNCHANGED_SUFFIX;
         return ARROW_ACTIVE_CLASS + diffSuffix;
     }
 
     public String getArrowsReactiveStyle(FeederNode feederNode, ComponentLibrary componentLibrary) {
-        String diffSuffix = branchDiffs.contains(feederNode.getId()) ? CHANGED_SUFFIX : UNCHANGED_SUFFIX;
+        String diffSuffix = diffData.getBranchesIds().contains(feederNode.getId()) ? CHANGED_SUFFIX : UNCHANGED_SUFFIX;
         return ARROW_REACTIVE_CLASS + diffSuffix;
     }
 

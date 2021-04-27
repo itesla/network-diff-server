@@ -25,8 +25,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.iidm.diff.DiffConfig;
 import com.powsybl.iidm.diff.DiffEquipment;
@@ -65,37 +63,11 @@ class NetworkDiffService {
 
     DiffConfig config = new DiffConfig(DiffConfig.EPSILON_DEFAULT, DiffConfig.FILTER_DIFF_DEFAULT);
 
-    class DiffData {
-        final List<String> switchesDiff;
-        final List<String> branchesDiff;
-
-        DiffData(String jsonDiff) throws IOException {
-            ObjectMapper objectMapper = new ObjectMapper();
-            Map<String, Object> jsonMap = objectMapper.readValue(jsonDiff, new TypeReference<Map<String, Object>>() { });
-            switchesDiff = (List<String>) ((List) jsonMap.get("diff.VoltageLevels")).stream()
-                    .map(t -> ((Map) t).get("vl.switchesStatus-delta"))
-                    .flatMap(t -> ((List<String>) t).stream())
-                    .collect(Collectors.toList());
-            branchesDiff = (List<String>) ((List) jsonMap.get("diff.Branches")).stream()
-                    .map(t -> ((Map) t).get("branch.terminalStatus-delta"))
-                    .flatMap(t -> ((List<String>) t).stream())
-                    .collect(Collectors.toList());
-        }
-
-        public List<String> getSwitchesIds() {
-            return switchesDiff;
-        }
-
-        public List<String> getBranchesIds() {
-            return branchesDiff;
-        }
-
-    }
-
     private Network getNetwork(UUID networkUuid) {
         try {
             return networkStoreService.getNetwork(networkUuid);
         } catch (PowsyblException e) {
+            LOGGER.error(e.getMessage());
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Network '" + networkUuid + "' not found");
         }
     }
@@ -171,29 +143,25 @@ class NetworkDiffService {
     }
 
     private String getVoltageLevelSvgDiff(Network network1, Network network2, String vlId, double epsilon) {
-        Objects.requireNonNull(network1);
-        Objects.requireNonNull(network2);
-        Objects.requireNonNull(vlId);
         try {
             String jsonDiff = diffVoltageLevel(network1, network2, vlId, epsilon);
-            DiffData diffData = new DiffData(jsonDiff);
-            List<String> switchesDiff = diffData.getSwitchesIds();
-            List<String> branchesDiff = diffData.getBranchesIds();
-            LOGGER.info("switchesDiff: {}, branchesDiff: {}", switchesDiff, branchesDiff);
-            return writeVoltageLevelSvg(network1, vlId, switchesDiff, branchesDiff);
+//            DiffData diffData = new DiffData(jsonDiff);
+//            return writeVoltageLevelSvg(network1, vlId, new DiffStyleProvider(diffData));
+            ColorsLevelsDiffData diffData = new ColorsLevelsDiffData(jsonDiff);
+            return writeVoltageLevelSvg(network1, vlId, new ColorsLevelsDiffStyleProvider(diffData, new ColorsLevelsDiffConfig(0, 10)));
         } catch (PowsyblException | IOException e) {
+            LOGGER.error(e.getMessage());
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         }
     }
 
-    private String writeVoltageLevelSvg(Network network, String vlId, List<String> vlDiffs, List<String> branchDiffs) {
+    private String writeVoltageLevelSvg(Network network, String vlId, ArrowsStyleProvider styleProvider) {
         String svgData;
         String metadataData;
         String jsonData;
         try (StringWriter svgWriter = new StringWriter();
              StringWriter metadataWriter = new StringWriter();
              StringWriter jsonWriter = new StringWriter()) {
-            ArrowsStyleProvider styleProvider = new DiffStyleProvider(vlDiffs, vlDiffs, branchDiffs);
             LayoutParameters layoutParameters = new LayoutParameters();
             layoutParameters.setCssInternal(true);
             ComponentLibrary componentLibrary = new ResourcesComponentLibrary("/ConvergenceLibrary");
@@ -232,30 +200,26 @@ class NetworkDiffService {
         return getSubstationSvgDiff(network1, network2, substationId, epsilon);
     }
 
-    public String getSubstationSvgDiff(Network network1, Network network2, String substationId, double epsilon) {
-        Objects.requireNonNull(network1);
-        Objects.requireNonNull(network2);
-        Objects.requireNonNull(substationId);
+    private String getSubstationSvgDiff(Network network1, Network network2, String substationId, double epsilon) {
         try {
             String jsonDiff = diffSubstation(network1, network2, substationId, epsilon);
-            DiffData diffData = new DiffData(jsonDiff);
-            List<String> switchesDiff = diffData.getSwitchesIds();
-            List<String> branchesDiff = diffData.getBranchesIds();
-            LOGGER.info("switchesDiff: {}, branchesDiff: {}", switchesDiff, branchesDiff);
-            return writeSubstationSvg(network1, substationId, switchesDiff, branchesDiff);
+//            DiffData diffData = new DiffData(jsonDiff);
+//            return writeSubstationSvg(network1, substationId, new DiffStyleProvider(diffData));
+            ColorsLevelsDiffData diffData = new ColorsLevelsDiffData(jsonDiff);
+            return writeSubstationSvg(network1, substationId, new ColorsLevelsDiffStyleProvider(diffData, new ColorsLevelsDiffConfig(0, 10)));
         } catch (PowsyblException | IOException e) {
+            LOGGER.error(e.getMessage());
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         }
     }
 
-    private String writeSubstationSvg(Network network, String substationId, List<String> vlDiffs, List<String> branchDiffs) {
+    private String writeSubstationSvg(Network network, String substationId, ArrowsStyleProvider styleProvider) {
         String svgData;
         String metadataData;
         String jsonData;
         try (StringWriter svgWriter = new StringWriter();
              StringWriter metadataWriter = new StringWriter();
              StringWriter jsonWriter = new StringWriter()) {
-            ArrowsStyleProvider styleProvider = new DiffStyleProvider(vlDiffs, vlDiffs, branchDiffs);
             LayoutParameters layoutParameters = new LayoutParameters();
             layoutParameters.setCssInternal(true);
             ComponentLibrary componentLibrary = new ResourcesComponentLibrary("/ConvergenceLibrary");
