@@ -13,11 +13,14 @@ public class ColorsLevelsDiffConfig {
 
     final double thresholdLevel1;
     final double thresholdLevel2;
+    final boolean usePercentage;
 
     public ColorsLevelsDiffConfig(double thresholdLevel1,
-                                  double thresholdLevel2) {
+                                  double thresholdLevel2,
+                                  boolean usePercentage) {
         this.thresholdLevel1 = thresholdLevel1;
         this.thresholdLevel2 = thresholdLevel2;
+        this.usePercentage = usePercentage;
     }
 
     public double getThresholdLevel1() {
@@ -26,5 +29,9 @@ public class ColorsLevelsDiffConfig {
 
     public double getThresholdLevel2() {
         return thresholdLevel2;
+    }
+
+    public boolean isUsePercentage() {
+        return usePercentage;
     }
 }

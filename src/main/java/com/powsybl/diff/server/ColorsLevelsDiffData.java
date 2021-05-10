@@ -28,11 +28,17 @@ public class ColorsLevelsDiffData {
         final double pDelta;
         final double qDelta;
         final double iDelta;
+        final double pDeltaP;
+        final double qDeltaP;
+        final double iDeltaP;
 
-        BranchSideDiff(double pDelta, double qDelta, double iDelta) {
+        BranchSideDiff(double pDelta, double qDelta, double iDelta, double pDeltaP, double qDeltaP, double iDeltaP) {
             this.pDelta = pDelta;
             this.qDelta = qDelta;
             this.iDelta = iDelta;
+            this.pDeltaP = pDeltaP;
+            this.qDeltaP = qDeltaP;
+            this.iDeltaP = iDeltaP;
         }
 
         public double getpDelta() {
@@ -46,6 +52,18 @@ public class ColorsLevelsDiffData {
         public double getiDelta() {
             return iDelta;
         }
+
+        public double getpDeltaP() {
+            return pDeltaP;
+        }
+
+        public double getqDeltaP() {
+            return qDeltaP;
+        }
+
+        public double getiDeltaP() {
+            return iDeltaP;
+        }
     }
 
     ColorsLevelsDiffData(String jsonDiff) throws IOException {
@@ -58,13 +76,19 @@ public class ColorsLevelsDiffData {
         branchesSideDiffs = new HashMap<String, ColorsLevelsDiffData.BranchSideDiff>();
         ((List) jsonMap.get("diff.Branches")).stream().forEach(branch -> {
             branchesSideDiffs.put(((Map) branch).get("branch.branchId1") + "_" + Side.ONE,
-                                  new BranchSideDiff((((Map) branch).get("branch.terminal2.p-delta") instanceof String) ? Double.NaN : (Double) ((Map) branch).get("branch.terminal1.p-delta"),
-                                                     (((Map) branch).get("branch.terminal2.p-delta") instanceof String) ? Double.NaN : (Double) ((Map) branch).get("branch.terminal1.q-delta"),
-                                                     (((Map) branch).get("branch.terminal2.p-delta") instanceof String) ? Double.NaN : (Double) ((Map) branch).get("branch.terminal1.i-delta")));
+                                  new BranchSideDiff((((Map) branch).get("branch.terminal1.p-delta") instanceof String) ? Double.NaN : (Double) ((Map) branch).get("branch.terminal1.p-delta"),
+                                                     (((Map) branch).get("branch.terminal1.q-delta") instanceof String) ? Double.NaN : (Double) ((Map) branch).get("branch.terminal1.q-delta"),
+                                                     (((Map) branch).get("branch.terminal1.i-delta") instanceof String) ? Double.NaN : (Double) ((Map) branch).get("branch.terminal1.i-delta"),
+                                                     (((Map) branch).get("branch.terminal1.p-delta-percent") instanceof String) ? Double.NaN : (Double) ((Map) branch).get("branch.terminal1.p-delta-percent"),
+                                                     (((Map) branch).get("branch.terminal1.q-delta-percent") instanceof String) ? Double.NaN : (Double) ((Map) branch).get("branch.terminal1.q-delta-percent"),
+                                                     (((Map) branch).get("branch.terminal1.i-delta-percent") instanceof String) ? Double.NaN : (Double) ((Map) branch).get("branch.terminal1.i-delta-percent")));
             branchesSideDiffs.put(((Map) branch).get("branch.branchId1") + "_" + Side.TWO,
                                   new BranchSideDiff((((Map) branch).get("branch.terminal2.p-delta") instanceof String) ? Double.NaN : (Double) ((Map) branch).get("branch.terminal2.p-delta"),
-                                                     (((Map) branch).get("branch.terminal2.p-delta") instanceof String) ? Double.NaN : (Double) ((Map) branch).get("branch.terminal2.q-delta"),
-                                                     (((Map) branch).get("branch.terminal2.p-delta") instanceof String) ? Double.NaN : (Double) ((Map) branch).get("branch.terminal2.i-delta")));
+                                                     (((Map) branch).get("branch.terminal2.q-delta") instanceof String) ? Double.NaN : (Double) ((Map) branch).get("branch.terminal2.q-delta"),
+                                                     (((Map) branch).get("branch.terminal2.i-delta") instanceof String) ? Double.NaN : (Double) ((Map) branch).get("branch.terminal2.i-delta"),
+                                                     (((Map) branch).get("branch.terminal2.p-delta-percent") instanceof String) ? Double.NaN : (Double) ((Map) branch).get("branch.terminal2.p-delta-percent"),
+                                                     (((Map) branch).get("branch.terminal2.q-delta-percent") instanceof String) ? Double.NaN : (Double) ((Map) branch).get("branch.terminal2.q-delta-percent"),
+                                                     (((Map) branch).get("branch.terminal2.i-delta-percent") instanceof String) ? Double.NaN : (Double) ((Map) branch).get("branch.terminal2.i-delta-percent")));
         });
     }
 

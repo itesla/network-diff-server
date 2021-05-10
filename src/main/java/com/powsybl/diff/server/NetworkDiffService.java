@@ -148,7 +148,7 @@ class NetworkDiffService {
 //            DiffData diffData = new DiffData(jsonDiff);
 //            return writeVoltageLevelSvg(network1, vlId, new DiffStyleProvider(diffData));
             ColorsLevelsDiffData diffData = new ColorsLevelsDiffData(jsonDiff);
-            return writeVoltageLevelSvg(network1, vlId, new ColorsLevelsDiffStyleProvider(diffData, new ColorsLevelsDiffConfig(0, 10)));
+            return writeVoltageLevelSvg(network1, vlId, new ColorsLevelsDiffStyleProvider(diffData, new ColorsLevelsDiffConfig(0, 10, true)));
         } catch (PowsyblException | IOException e) {
             LOGGER.error(e.getMessage());
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
@@ -206,7 +206,7 @@ class NetworkDiffService {
 //            DiffData diffData = new DiffData(jsonDiff);
 //            return writeSubstationSvg(network1, substationId, new DiffStyleProvider(diffData));
             ColorsLevelsDiffData diffData = new ColorsLevelsDiffData(jsonDiff);
-            return writeSubstationSvg(network1, substationId, new ColorsLevelsDiffStyleProvider(diffData, new ColorsLevelsDiffConfig(0, 10)));
+            return writeSubstationSvg(network1, substationId, new ColorsLevelsDiffStyleProvider(diffData, new ColorsLevelsDiffConfig(0, 10, true)));
         } catch (PowsyblException | IOException e) {
             LOGGER.error(e.getMessage());
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);

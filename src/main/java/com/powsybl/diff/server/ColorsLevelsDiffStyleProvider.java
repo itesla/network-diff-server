@@ -64,11 +64,15 @@ public class ColorsLevelsDiffStyleProvider extends DefaultDiagramStyleProvider i
             if (diffData.getBranchesSideDiffs().keySet().containsAll(edgesNodesIds) || diffData.getBranchesSideDiffs().containsKey(node.getId())) {
                 double iDelta = 0;
                 if (diffData.getBranchesSideDiffs().containsKey(node.getId())) {
-                    iDelta = diffData.getBranchesSideDiffs().get(node.getId()).getiDelta();
+                    iDelta = colorsLevelsDiffConfig.isUsePercentage()
+                             ? diffData.getBranchesSideDiffs().get(node.getId()).getiDeltaP()
+                             : diffData.getBranchesSideDiffs().get(node.getId()).getiDelta();
                 } else {
                     iDelta = edgesNodesIds.stream()
                                           .mapToDouble(nodeId -> {
-                                              return diffData.getBranchesSideDiffs().get(nodeId).getiDelta();
+                                              return colorsLevelsDiffConfig.isUsePercentage()
+                                                     ? diffData.getBranchesSideDiffs().get(nodeId).getiDeltaP()
+                                                     : diffData.getBranchesSideDiffs().get(nodeId).getiDelta();
                                           })
                                           .max()
                                           .orElse(0);
@@ -91,9 +95,13 @@ public class ColorsLevelsDiffStyleProvider extends DefaultDiagramStyleProvider i
         if (diffData.getBranchesSideDiffs().containsKey(node1.getId()) || diffData.getBranchesSideDiffs().containsKey(node2.getId())) {
             double iDelta = 0;
             if (diffData.getBranchesSideDiffs().containsKey(node1.getId())) {
-                iDelta = diffData.getBranchesSideDiffs().get(node1.getId()).getiDelta();
+                iDelta = colorsLevelsDiffConfig.isUsePercentage()
+                         ? diffData.getBranchesSideDiffs().get(node1.getId()).getiDeltaP()
+                         : diffData.getBranchesSideDiffs().get(node1.getId()).getiDelta();
             } else if (diffData.getBranchesSideDiffs().containsKey(node2.getId())) {
-                iDelta = diffData.getBranchesSideDiffs().get(node2.getId()).getiDelta();
+                iDelta = colorsLevelsDiffConfig.isUsePercentage()
+                         ? diffData.getBranchesSideDiffs().get(node2.getId()).getiDeltaP()
+                         : diffData.getBranchesSideDiffs().get(node2.getId()).getiDelta();
             }
             diffSuffix = getLevel(iDelta);
         }
@@ -110,7 +118,9 @@ public class ColorsLevelsDiffStyleProvider extends DefaultDiagramStyleProvider i
     public String getArrowsActiveStyle(FeederNode feederNode, ComponentLibrary componentLibrary) {
         String diffSuffix = LEVEL_0_SUFFIX;
         if (diffData.getBranchesSideDiffs().containsKey(feederNode.getId())) {
-            double pDelta = diffData.getBranchesSideDiffs().get(feederNode.getId()).getpDelta();
+            double pDelta = colorsLevelsDiffConfig.isUsePercentage()
+                            ? diffData.getBranchesSideDiffs().get(feederNode.getId()).getpDeltaP()
+                            : diffData.getBranchesSideDiffs().get(feederNode.getId()).getpDelta();
             diffSuffix = getLevel(pDelta);
         }
         return ARROW_ACTIVE_CLASS + diffSuffix;
@@ -119,7 +129,9 @@ public class ColorsLevelsDiffStyleProvider extends DefaultDiagramStyleProvider i
     public String getArrowsReactiveStyle(FeederNode feederNode, ComponentLibrary componentLibrary) {
         String diffSuffix = LEVEL_0_SUFFIX;
         if (diffData.getBranchesSideDiffs().containsKey(feederNode.getId())) {
-            double qDelta = diffData.getBranchesSideDiffs().get(feederNode.getId()).getqDelta();
+            double qDelta = colorsLevelsDiffConfig.isUsePercentage()
+                            ? diffData.getBranchesSideDiffs().get(feederNode.getId()).getqDeltaP()
+                            : diffData.getBranchesSideDiffs().get(feederNode.getId()).getqDelta();
             diffSuffix = getLevel(qDelta);
         }
         return ARROW_REACTIVE_CLASS + diffSuffix;
