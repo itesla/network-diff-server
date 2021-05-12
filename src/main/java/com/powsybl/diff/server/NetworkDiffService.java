@@ -126,6 +126,8 @@ class NetworkDiffService {
         //NaN is not part of the JSON standard and frontend would fail when parsing it
         //it should be handled at the source, though
         jsonDiff = jsonDiff.replace(": NaN,", ": \"Nan\",");
+        jsonDiff = jsonDiff.replace(": Infinity,", ": \"Infinity\",");
+        jsonDiff = jsonDiff.replace(": -Infinity,", ": \"-Infinity\",");
         return jsonDiff;
     }
 
