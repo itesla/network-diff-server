@@ -78,10 +78,14 @@ class NetworkDiffService {
 
     //voltage levels
     public String diffVoltageLevel(UUID network1Uuid, UUID network2Uuid, String vlId) {
-        return diffVoltageLevel(network1Uuid, network2Uuid, vlId, DiffConfig.EPSILON_DEFAULT);
+        return diffVoltageLevel(network1Uuid, network2Uuid, vlId, DiffConfig.EPSILON_DEFAULT, DiffConfig.EPSILON_DEFAULT);
     }
 
     public String diffVoltageLevel(UUID network1Uuid, UUID network2Uuid, String vlId, double epsilon) {
+        return diffVoltageLevel(network1Uuid, network2Uuid, vlId, epsilon, epsilon);
+    }
+
+    public String diffVoltageLevel(UUID network1Uuid, UUID network2Uuid, String vlId, double epsilon, double voltageEpsilon) {
         Objects.requireNonNull(network1Uuid);
         Objects.requireNonNull(network2Uuid);
         Objects.requireNonNull(vlId);
@@ -95,22 +99,18 @@ class NetworkDiffService {
         if (vl2 == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Voltage level " + vlId + " not found in network " + network2Uuid);
         }
-        String jsonDiff = diffVoltageLevel(network1, network2, vlId, epsilon);
+        String jsonDiff = diffVoltageLevel(network1, network2, vlId, epsilon, voltageEpsilon);
         LOGGER.info("network1 uuid: {}, network2 uuid: {}, vl: {}, diff: {}", network1Uuid, network2Uuid, vlId, jsonDiff);
         return jsonDiff;
     }
 
-    private String diffVoltageLevel(Network network1, Network network2, String vlId, double epsilon) {
+    private String diffVoltageLevel(Network network1, Network network2, String vlId, double epsilon, double voltageEpsilon) {
         List<String> voltageLevels = Collections.singletonList(vlId);
         List<String> branches = network1.getVoltageLevel(vlId).getConnectableStream(Branch.class).map(Branch::getId).collect(Collectors.toList());
-        return diffVoltageLevels(network1, network2, voltageLevels, branches, epsilon);
+        return diffNetworks(network1, network2, voltageLevels, branches, epsilon, voltageEpsilon);
     }
 
-    private String diffVoltageLevels(Network network1, Network network2, List<String> voltageLevels, List<String> branches) {
-        return diffVoltageLevels(network1, network2, voltageLevels, branches, DiffConfig.EPSILON_DEFAULT);
-    }
-
-    private String diffVoltageLevels(Network network1, Network network2, List<String> voltageLevels, List<String> branches, double epsilon) {
+    private String diffNetworks(Network network1, Network network2, List<String> voltageLevels, List<String> branches, double epsilon, double voltageEpsilon) {
         DiffEquipment diffEquipment = new DiffEquipment();
         diffEquipment.setVoltageLevels(voltageLevels);
         List<DiffEquipmentType> equipmentTypes = new ArrayList<DiffEquipmentType>();
@@ -120,7 +120,7 @@ class NetworkDiffService {
             diffEquipment.setBranches(branches);
         }
         diffEquipment.setEquipmentTypes(equipmentTypes);
-        NetworkDiff ndiff = new NetworkDiff(new DiffConfig(epsilon, DiffConfig.FILTER_DIFF_DEFAULT));
+        NetworkDiff ndiff = new NetworkDiff(new DiffConfig(epsilon, voltageEpsilon, DiffConfig.FILTER_DIFF_DEFAULT));
         NetworkDiffResults diffVl = ndiff.diff(network1, network2, diffEquipment);
         String jsonDiff = NetworkDiff.writeJson(diffVl);
         //NaN is not part of the JSON standard and frontend would fail when parsing it
@@ -132,21 +132,25 @@ class NetworkDiffService {
     }
 
     public String getVoltageLevelSvgDiff(UUID network1Uuid, UUID network2Uuid, String vlId) {
-        return getVoltageLevelSvgDiff(network1Uuid, network2Uuid, vlId, DiffConfig.EPSILON_DEFAULT);
+        return getVoltageLevelSvgDiff(network1Uuid, network2Uuid, vlId, DiffConfig.EPSILON_DEFAULT, DiffConfig.EPSILON_DEFAULT);
     }
 
     public String getVoltageLevelSvgDiff(UUID network1Uuid, UUID network2Uuid, String vlId, double epsilon) {
+        return getVoltageLevelSvgDiff(network1Uuid, network2Uuid, vlId, epsilon, epsilon);
+    }
+
+    public String getVoltageLevelSvgDiff(UUID network1Uuid, UUID network2Uuid, String vlId, double epsilon, double voltageEpsilon) {
         Objects.requireNonNull(network1Uuid);
         Objects.requireNonNull(network2Uuid);
         Objects.requireNonNull(vlId);
         Network network1 = getNetwork(network1Uuid);
         Network network2 = getNetwork(network2Uuid);
-        return getVoltageLevelSvgDiff(network1, network2, vlId, epsilon);
+        return getVoltageLevelSvgDiff(network1, network2, vlId, epsilon, voltageEpsilon);
     }
 
-    private String getVoltageLevelSvgDiff(Network network1, Network network2, String vlId, double epsilon) {
+    private String getVoltageLevelSvgDiff(Network network1, Network network2, String vlId, double epsilon, double voltageEpsilon) {
         try {
-            String jsonDiff = diffVoltageLevel(network1, network2, vlId, epsilon);
+            String jsonDiff = diffVoltageLevel(network1, network2, vlId, epsilon, voltageEpsilon);
 //            DiffData diffData = new DiffData(jsonDiff);
 //            return writeVoltageLevelSvg(network1, vlId, new DiffStyleProvider(diffData));
             ColorsLevelsDiffData diffData = new ColorsLevelsDiffData(jsonDiff);
@@ -190,21 +194,25 @@ class NetworkDiffService {
 
     //substations
     public String getSubstationSvgDiff(UUID network1Uuid, UUID network2Uuid, String substationId) {
-        return getSubstationSvgDiff(network1Uuid, network2Uuid, substationId, DiffConfig.EPSILON_DEFAULT);
+        return getSubstationSvgDiff(network1Uuid, network2Uuid, substationId, DiffConfig.EPSILON_DEFAULT, DiffConfig.EPSILON_DEFAULT);
     }
 
     public String getSubstationSvgDiff(UUID network1Uuid, UUID network2Uuid, String substationId, double epsilon) {
+        return getSubstationSvgDiff(network1Uuid, network2Uuid, substationId, epsilon, epsilon);
+    }
+
+    public String getSubstationSvgDiff(UUID network1Uuid, UUID network2Uuid, String substationId, double epsilon, double voltageEpsilon) {
         Objects.requireNonNull(network1Uuid);
         Objects.requireNonNull(network2Uuid);
         Objects.requireNonNull(substationId);
         Network network1 = getNetwork(network1Uuid);
         Network network2 = getNetwork(network2Uuid);
-        return getSubstationSvgDiff(network1, network2, substationId, epsilon);
+        return getSubstationSvgDiff(network1, network2, substationId, epsilon, voltageEpsilon);
     }
 
-    private String getSubstationSvgDiff(Network network1, Network network2, String substationId, double epsilon) {
+    private String getSubstationSvgDiff(Network network1, Network network2, String substationId, double epsilon, double voltageEpsilon) {
         try {
-            String jsonDiff = diffSubstation(network1, network2, substationId, epsilon);
+            String jsonDiff = diffSubstation(network1, network2, substationId, epsilon, voltageEpsilon);
 //            DiffData diffData = new DiffData(jsonDiff);
 //            return writeSubstationSvg(network1, substationId, new DiffStyleProvider(diffData));
             ColorsLevelsDiffData diffData = new ColorsLevelsDiffData(jsonDiff);
@@ -248,10 +256,14 @@ class NetworkDiffService {
     }
 
     public String diffSubstation(UUID network1Uuid, UUID network2Uuid, String substationId) {
-        return diffSubstation(network1Uuid, network2Uuid, substationId, DiffConfig.EPSILON_DEFAULT);
+        return diffSubstation(network1Uuid, network2Uuid, substationId, DiffConfig.EPSILON_DEFAULT, DiffConfig.EPSILON_DEFAULT);
     }
 
     public String diffSubstation(UUID network1Uuid, UUID network2Uuid, String substationId, double epsilon) {
+        return diffSubstation(network1Uuid, network2Uuid, substationId, epsilon, epsilon);
+    }
+
+    public String diffSubstation(UUID network1Uuid, UUID network2Uuid, String substationId, double epsilon, double voltageEpsilon) {
         Objects.requireNonNull(network1Uuid);
         Objects.requireNonNull(network2Uuid);
         Objects.requireNonNull(substationId);
@@ -265,16 +277,12 @@ class NetworkDiffService {
         if (substation2 == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Substation " + substationId + " not found in network2 " + network2Uuid);
         }
-        String jsonDiff = diffSubstation(network1, network2, substationId, epsilon);
+        String jsonDiff = diffSubstation(network1, network2, substationId, epsilon, voltageEpsilon);
         LOGGER.info("network1 uuid: {}, network2 uuid: {}, substation: {}, diff: {}", network1Uuid, network2Uuid, substationId, jsonDiff);
         return jsonDiff;
     }
 
-    private String diffSubstation(Network network1, Network network2, String substationId) {
-        return diffSubstation(network1, network2, substationId, DiffConfig.EPSILON_DEFAULT);
-    }
-
-    private String diffSubstation(Network network1, Network network2, String substationId, double epsilon) {
+    private String diffSubstation(Network network1, Network network2, String substationId, double epsilon, double voltageEpsilon) {
         Substation substation1 = network1.getSubstation(substationId);
         List<String> voltageLevels = substation1.getVoltageLevelStream().map(VoltageLevel::getId)
                 .collect(Collectors.toList());
@@ -283,7 +291,7 @@ class NetworkDiffService {
         List<String> twts = substation1.getTwoWindingsTransformerStream().map(TwoWindingsTransformer::getId)
                 .collect(Collectors.toList());
         branches.addAll(twts);
-        String jsonDiff = diffVoltageLevels(network1, network2, voltageLevels, branches, epsilon);
+        String jsonDiff = diffNetworks(network1, network2, voltageLevels, branches, epsilon, voltageEpsilon);
         return jsonDiff;
     }
 }
