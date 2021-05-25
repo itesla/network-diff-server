@@ -100,7 +100,7 @@ class NetworkDiffService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Voltage level " + vlId + " not found in network " + network2Uuid);
         }
         String jsonDiff = diffVoltageLevel(network1, network2, vlId, epsilon, voltageEpsilon);
-        LOGGER.info("network1 uuid: {}, network2 uuid: {}, vl: {}, diff: {}", network1Uuid, network2Uuid, vlId, jsonDiff);
+        LOGGER.info("network1 uuid: {}, network2 uuid: {}, vl: {}, threshold: {}, voltageThreshold: {}, diff: {}", network1Uuid, network2Uuid, vlId, epsilon, voltageEpsilon, jsonDiff);
         return jsonDiff;
     }
 
@@ -278,7 +278,7 @@ class NetworkDiffService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Substation " + substationId + " not found in network2 " + network2Uuid);
         }
         String jsonDiff = diffSubstation(network1, network2, substationId, epsilon, voltageEpsilon);
-        LOGGER.info("network1 uuid: {}, network2 uuid: {}, substation: {}, diff: {}", network1Uuid, network2Uuid, substationId, jsonDiff);
+        LOGGER.info("network1 uuid: {}, network2 uuid: {}, substation: {}, threshold: {}, voltageThreshold: {}, diff: {}", network1Uuid, network2Uuid, substationId, epsilon, voltageEpsilon, jsonDiff);
         return jsonDiff;
     }
 

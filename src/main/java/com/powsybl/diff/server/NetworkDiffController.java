@@ -66,6 +66,20 @@ public class NetworkDiffController {
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(jsonDiff);
     }
 
+    @GetMapping(value = "/networks/{network1Uuid}/diff/{network2Uuid}/vl/{vlId}/{epsilon}/{voltageEpsilon}")
+    @ApiOperation(value = "compare two networks voltage levels, with thresholds for current and voltage", produces = "application/json")
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "network diff")})
+    public ResponseEntity<String> diffNetworks(
+            @ApiParam(value = "Network1 UUID") @PathVariable("network1Uuid") UUID network1Uuid,
+            @ApiParam(value = "Network2 UUID") @PathVariable("network2Uuid") UUID network2Uuid,
+            @ApiParam(value = "Voltage level ID") @PathVariable("vlId") String vlId,
+            @ApiParam(value = "Epsilon") @PathVariable("epsilon") Double epsilon,
+            @ApiParam(value = "Voltage Epsilon") @PathVariable("voltageEpsilon") Double volltageEpsilon) {
+
+        String jsonDiff = networkDiffService.diffVoltageLevel(network1Uuid, network2Uuid, vlId, epsilon, volltageEpsilon);
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(jsonDiff);
+    }
+
     @GetMapping(value = "/networks")
     @ApiOperation(value = "get network ids", produces = "application/json")
     @ApiResponses(value = {@ApiResponse(code = 200, message = "network iids")})
@@ -98,6 +112,19 @@ public class NetworkDiffController {
         return ResponseEntity.ok().contentType(MediaType.valueOf("image/svg+xml")).body(svg);
     }
 
+    @GetMapping(value = "/networks/{network1Uuid}/svgdiff/{network2Uuid}/vl/{vlId}/{epsilon}/{voltageEpsilon}")
+    @ApiOperation(value = "get voltage level svg diff diagram, with current and voltage thresholds", produces = "image/svg+xml")
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "network diff")})
+    public ResponseEntity<String> getSvg(
+            @ApiParam(value = "Network1 UUID") @PathVariable("network1Uuid") UUID network1Uuid,
+            @ApiParam(value = "Network2 UUID") @PathVariable("network2Uuid") UUID network2Uuid,
+            @ApiParam(value = "Voltage level ID") @PathVariable("vlId") String vlId,
+            @ApiParam(value = "Epsilon") @PathVariable("epsilon") Double epsilon,
+            @ApiParam(value = "Voltage Epsilon") @PathVariable("voltageEpsilon") Double voltageEpsilon) {
+        String svg = networkDiffService.getVoltageLevelSvgDiff(network1Uuid, network2Uuid, vlId, epsilon, voltageEpsilon);
+        return ResponseEntity.ok().contentType(MediaType.valueOf("image/svg+xml")).body(svg);
+    }
+
     @GetMapping(value = "/networks/{network1Uuid}/svgdiff/{network2Uuid}/sub/{subId}")
     @ApiOperation(value = "get substation svg diff diagram", produces = "image/svg+xml")
     @ApiResponses(value = {@ApiResponse(code = 200, message = "network diff")})
@@ -118,6 +145,19 @@ public class NetworkDiffController {
             @ApiParam(value = "Substation ID") @PathVariable("subId") String subId,
             @ApiParam(value = "Epsilon") @PathVariable("epsilon") Double epsilon) {
         String svg = networkDiffService.getSubstationSvgDiff(network1Uuid, network2Uuid, subId, epsilon);
+        return ResponseEntity.ok().contentType(MediaType.valueOf("image/svg+xml")).body(svg);
+    }
+
+    @GetMapping(value = "/networks/{network1Uuid}/svgdiff/{network2Uuid}/sub/{subId}/{epsilon}/{voltageEpsilon}")
+    @ApiOperation(value = "get substation svg diff diagram, with current and voltage thresholds", produces = "image/svg+xml")
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "network diff")})
+    public ResponseEntity<String> getSubSvg(
+            @ApiParam(value = "Network1 UUID") @PathVariable("network1Uuid") UUID network1Uuid,
+            @ApiParam(value = "Network2 UUID") @PathVariable("network2Uuid") UUID network2Uuid,
+            @ApiParam(value = "Substation ID") @PathVariable("subId") String subId,
+            @ApiParam(value = "Epsilon") @PathVariable("epsilon") Double epsilon,
+            @ApiParam(value = "Voltage Epsilon") @PathVariable("voltageEpsilon") Double voltageEpsilon) {
+        String svg = networkDiffService.getSubstationSvgDiff(network1Uuid, network2Uuid, subId, epsilon, voltageEpsilon);
         return ResponseEntity.ok().contentType(MediaType.valueOf("image/svg+xml")).body(svg);
     }
 
@@ -145,4 +185,19 @@ public class NetworkDiffController {
         String jsonDiff = networkDiffService.diffSubstation(network1Uuid, network2Uuid, subId, epsilon);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(jsonDiff);
     }
+
+    @GetMapping(value = "/networks/{network1Uuid}/diff/{network2Uuid}/sub/{subId}/{epsilon}/{voltageEpsilon}")
+    @ApiOperation(value = "compare two networks substations, with current and voltage thresholds", produces = "application/json")
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "network diff")})
+    public ResponseEntity<String> diffSubstation(
+            @ApiParam(value = "Network1 UUID") @PathVariable("network1Uuid") UUID network1Uuid,
+            @ApiParam(value = "Network2 UUID") @PathVariable("network2Uuid") UUID network2Uuid,
+            @ApiParam(value = "Substation ID") @PathVariable("subId") String subId,
+            @ApiParam(value = "Epsilon") @PathVariable("epsilon") Double epsilon,
+            @ApiParam(value = "Voltage Epsilon") @PathVariable("voltageEpsilon") Double voltageEpsilon) {
+
+        String jsonDiff = networkDiffService.diffSubstation(network1Uuid, network2Uuid, subId, epsilon, voltageEpsilon);
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(jsonDiff);
+    }
+
 }
