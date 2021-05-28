@@ -7,12 +7,12 @@
 package com.powsybl.diff.server;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
-
-import javax.inject.Inject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -38,8 +38,12 @@ public class NetworkDiffController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NetworkDiffController.class);
 
-    @Inject
-    private NetworkDiffService networkDiffService;
+    private final NetworkDiffService networkDiffService;
+
+    @Autowired
+    public NetworkDiffController(NetworkDiffService networkDiffService) {
+        this.networkDiffService = Objects.requireNonNull(networkDiffService);
+    }
 
     @GetMapping(value = "/networks/{network1Uuid}/diff/{network2Uuid}/vl/{vlId}")
     @ApiOperation(value = "compare two networks voltage levels", produces = "application/json")
