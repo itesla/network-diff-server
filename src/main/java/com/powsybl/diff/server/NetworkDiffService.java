@@ -6,37 +6,9 @@
  */
 package com.powsybl.diff.server;
 
-import java.io.IOException;
-import java.io.StringWriter;
-import java.io.UncheckedIOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
-
 import com.powsybl.commons.PowsyblException;
-import com.powsybl.iidm.diff.DiffConfig;
-import com.powsybl.iidm.diff.DiffEquipment;
-import com.powsybl.iidm.diff.DiffEquipmentType;
-import com.powsybl.iidm.diff.NetworkDiff;
-import com.powsybl.iidm.diff.NetworkDiffResults;
-import com.powsybl.iidm.network.Branch;
-import com.powsybl.iidm.network.Line;
-import com.powsybl.iidm.network.Network;
-import com.powsybl.iidm.network.Substation;
-import com.powsybl.iidm.network.TwoWindingsTransformer;
-import com.powsybl.iidm.network.VoltageLevel;
+import com.powsybl.iidm.diff.*;
+import com.powsybl.iidm.network.*;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.sld.GraphBuilder;
 import com.powsybl.sld.NetworkGraphBuilder;
@@ -48,6 +20,19 @@ import com.powsybl.sld.layout.SmartVoltageLevelLayoutFactory;
 import com.powsybl.sld.library.ComponentLibrary;
 import com.powsybl.sld.library.ResourcesComponentLibrary;
 import com.powsybl.sld.svg.DiagramLabelProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.io.IOException;
+import java.io.StringWriter;
+import java.io.UncheckedIOException;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author Christian Biasuzzi <christian.biasuzzi@techrain.eu>
@@ -132,20 +117,33 @@ class NetworkDiffService {
     }
 
     public String getVoltageLevelSvgDiff(UUID network1Uuid, UUID network2Uuid, String vlId) {
-        return getVoltageLevelSvgDiff(network1Uuid, network2Uuid, vlId, DiffConfig.EPSILON_DEFAULT, DiffConfig.EPSILON_DEFAULT);
+        return getVoltageLevelSvgDiff(network1Uuid, network2Uuid, vlId, DiffConfig.EPSILON_DEFAULT, DiffConfig.EPSILON_DEFAULT, null);
     }
 
     public String getVoltageLevelSvgDiff(UUID network1Uuid, UUID network2Uuid, String vlId, double epsilon) {
-        return getVoltageLevelSvgDiff(network1Uuid, network2Uuid, vlId, epsilon, epsilon);
+        return getVoltageLevelSvgDiff(network1Uuid, network2Uuid, vlId, epsilon, epsilon, null);
     }
 
-    public String getVoltageLevelSvgDiff(UUID network1Uuid, UUID network2Uuid, String vlId, double epsilon, double voltageEpsilon) {
+    public String getVoltageLevelSvgDiff(UUID network1Uuid, UUID network2Uuid, String vlId, double epsilon, double voltageEpsilon, String levels) {
         Objects.requireNonNull(network1Uuid);
         Objects.requireNonNull(network2Uuid);
         Objects.requireNonNull(vlId);
         Network network1 = getNetwork(network1Uuid);
         Network network2 = getNetwork(network2Uuid);
+
+        LevelsData levelsData = parseLevelsData(levels);
+        LOGGER.info("levels data: {}", levelsData);
+
         return getVoltageLevelSvgDiff(network1, network2, vlId, epsilon, voltageEpsilon);
+    }
+
+    private LevelsData parseLevelsData(String levels) {
+        if (levels != null) {
+            LevelsData levelsData = LevelsData.parseData(levels, true);
+            return levelsData;
+        } else {
+            return null;
+        }
     }
 
     private String getVoltageLevelSvgDiff(Network network1, Network network2, String vlId, double epsilon, double voltageEpsilon) {
@@ -194,19 +192,23 @@ class NetworkDiffService {
 
     //substations
     public String getSubstationSvgDiff(UUID network1Uuid, UUID network2Uuid, String substationId) {
-        return getSubstationSvgDiff(network1Uuid, network2Uuid, substationId, DiffConfig.EPSILON_DEFAULT, DiffConfig.EPSILON_DEFAULT);
+        return getSubstationSvgDiff(network1Uuid, network2Uuid, substationId, DiffConfig.EPSILON_DEFAULT, DiffConfig.EPSILON_DEFAULT, null);
     }
 
     public String getSubstationSvgDiff(UUID network1Uuid, UUID network2Uuid, String substationId, double epsilon) {
-        return getSubstationSvgDiff(network1Uuid, network2Uuid, substationId, epsilon, epsilon);
+        return getSubstationSvgDiff(network1Uuid, network2Uuid, substationId, epsilon, epsilon, null);
     }
 
-    public String getSubstationSvgDiff(UUID network1Uuid, UUID network2Uuid, String substationId, double epsilon, double voltageEpsilon) {
+    public String getSubstationSvgDiff(UUID network1Uuid, UUID network2Uuid, String substationId, double epsilon, double voltageEpsilon, String levels) {
         Objects.requireNonNull(network1Uuid);
         Objects.requireNonNull(network2Uuid);
         Objects.requireNonNull(substationId);
         Network network1 = getNetwork(network1Uuid);
         Network network2 = getNetwork(network2Uuid);
+
+        LevelsData levelsData = parseLevelsData(levels);
+        LOGGER.info("levels data: {}", levelsData);
+
         return getSubstationSvgDiff(network1, network2, substationId, epsilon, voltageEpsilon);
     }
 

@@ -6,26 +6,19 @@
  */
 package com.powsybl.diff.server;
 
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
-
+import io.swagger.annotations.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
 
 /**
  * @author Christian Biasuzzi <christian.biasuzzi@techrain.eu>
@@ -37,6 +30,7 @@ import io.swagger.annotations.ApiResponses;
 public class NetworkDiffController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NetworkDiffController.class);
+    private static final Double DEFAULTVAL = 0.0;
 
     private final NetworkDiffService networkDiffService;
 
@@ -64,9 +58,9 @@ public class NetworkDiffController {
             @ApiParam(value = "Network1 UUID") @PathVariable("network1Uuid") UUID network1Uuid,
             @ApiParam(value = "Network2 UUID") @PathVariable("network2Uuid") UUID network2Uuid,
             @ApiParam(value = "Voltage level ID") @PathVariable("vlId") String vlId,
-            @ApiParam(value = "Epsilon") @PathVariable("epsilon") Double epsilon) {
+            @ApiParam(value = "Epsilon") @PathVariable("epsilon") Optional<Double> epsilon) {
 
-        String jsonDiff = networkDiffService.diffVoltageLevel(network1Uuid, network2Uuid, vlId, epsilon);
+        String jsonDiff = networkDiffService.diffVoltageLevel(network1Uuid, network2Uuid, vlId, epsilon.orElse(DEFAULTVAL));
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(jsonDiff);
     }
 
@@ -77,10 +71,10 @@ public class NetworkDiffController {
             @ApiParam(value = "Network1 UUID") @PathVariable("network1Uuid") UUID network1Uuid,
             @ApiParam(value = "Network2 UUID") @PathVariable("network2Uuid") UUID network2Uuid,
             @ApiParam(value = "Voltage level ID") @PathVariable("vlId") String vlId,
-            @ApiParam(value = "Epsilon") @PathVariable("epsilon") Double epsilon,
-            @ApiParam(value = "Voltage Epsilon") @PathVariable("voltageEpsilon") Double volltageEpsilon) {
+            @ApiParam(value = "Epsilon") @PathVariable("epsilon") Optional<Double> epsilon,
+            @ApiParam(value = "Voltage Epsilon") @PathVariable("voltageEpsilon") Optional<Double> volltageEpsilon) {
 
-        String jsonDiff = networkDiffService.diffVoltageLevel(network1Uuid, network2Uuid, vlId, epsilon, volltageEpsilon);
+        String jsonDiff = networkDiffService.diffVoltageLevel(network1Uuid, network2Uuid, vlId, epsilon.orElse(DEFAULTVAL), volltageEpsilon.orElse(DEFAULTVAL));
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(jsonDiff);
     }
 
@@ -111,8 +105,8 @@ public class NetworkDiffController {
             @ApiParam(value = "Network1 UUID") @PathVariable("network1Uuid") UUID network1Uuid,
             @ApiParam(value = "Network2 UUID") @PathVariable("network2Uuid") UUID network2Uuid,
             @ApiParam(value = "Voltage level ID") @PathVariable("vlId") String vlId,
-            @ApiParam(value = "Epsilon") @PathVariable("epsilon") Double epsilon) {
-        String svg = networkDiffService.getVoltageLevelSvgDiff(network1Uuid, network2Uuid, vlId, epsilon);
+            @ApiParam(value = "Epsilon") @PathVariable("epsilon") Optional<Double> epsilon) {
+        String svg = networkDiffService.getVoltageLevelSvgDiff(network1Uuid, network2Uuid, vlId, epsilon.orElse(DEFAULTVAL));
         return ResponseEntity.ok().contentType(MediaType.valueOf("image/svg+xml")).body(svg);
     }
 
@@ -123,9 +117,10 @@ public class NetworkDiffController {
             @ApiParam(value = "Network1 UUID") @PathVariable("network1Uuid") UUID network1Uuid,
             @ApiParam(value = "Network2 UUID") @PathVariable("network2Uuid") UUID network2Uuid,
             @ApiParam(value = "Voltage level ID") @PathVariable("vlId") String vlId,
-            @ApiParam(value = "Epsilon") @PathVariable("epsilon") Double epsilon,
-            @ApiParam(value = "Voltage Epsilon") @PathVariable("voltageEpsilon") Double voltageEpsilon) {
-        String svg = networkDiffService.getVoltageLevelSvgDiff(network1Uuid, network2Uuid, vlId, epsilon, voltageEpsilon);
+            @ApiParam(value = "Epsilon") @PathVariable("epsilon") Optional<Double> epsilon,
+            @ApiParam(value = "Voltage Epsilon") @PathVariable("voltageEpsilon") Optional<Double> voltageEpsilon,
+            @ApiParam(value = "Levels", hidden = true) @RequestParam("levels") Optional<String> levels) {
+        String svg = networkDiffService.getVoltageLevelSvgDiff(network1Uuid, network2Uuid, vlId, epsilon.orElse(DEFAULTVAL), voltageEpsilon.orElse(DEFAULTVAL), levels.orElse(null));
         return ResponseEntity.ok().contentType(MediaType.valueOf("image/svg+xml")).body(svg);
     }
 
@@ -147,8 +142,8 @@ public class NetworkDiffController {
             @ApiParam(value = "Network1 UUID") @PathVariable("network1Uuid") UUID network1Uuid,
             @ApiParam(value = "Network2 UUID") @PathVariable("network2Uuid") UUID network2Uuid,
             @ApiParam(value = "Substation ID") @PathVariable("subId") String subId,
-            @ApiParam(value = "Epsilon") @PathVariable("epsilon") Double epsilon) {
-        String svg = networkDiffService.getSubstationSvgDiff(network1Uuid, network2Uuid, subId, epsilon);
+            @ApiParam(value = "Epsilon") @PathVariable("epsilon") Optional<Double> epsilon) {
+        String svg = networkDiffService.getSubstationSvgDiff(network1Uuid, network2Uuid, subId, epsilon.orElse(DEFAULTVAL));
         return ResponseEntity.ok().contentType(MediaType.valueOf("image/svg+xml")).body(svg);
     }
 
@@ -159,9 +154,10 @@ public class NetworkDiffController {
             @ApiParam(value = "Network1 UUID") @PathVariable("network1Uuid") UUID network1Uuid,
             @ApiParam(value = "Network2 UUID") @PathVariable("network2Uuid") UUID network2Uuid,
             @ApiParam(value = "Substation ID") @PathVariable("subId") String subId,
-            @ApiParam(value = "Epsilon") @PathVariable("epsilon") Double epsilon,
-            @ApiParam(value = "Voltage Epsilon") @PathVariable("voltageEpsilon") Double voltageEpsilon) {
-        String svg = networkDiffService.getSubstationSvgDiff(network1Uuid, network2Uuid, subId, epsilon, voltageEpsilon);
+            @ApiParam(value = "Epsilon") @PathVariable("epsilon") Optional<Double> epsilon,
+            @ApiParam(value = "Voltage Epsilon") @PathVariable("voltageEpsilon") Optional<Double> voltageEpsilon,
+            @ApiParam(value = "Levels", hidden = true) @RequestParam("levels") Optional<String> levels) {
+        String svg = networkDiffService.getSubstationSvgDiff(network1Uuid, network2Uuid, subId, epsilon.orElse(DEFAULTVAL), voltageEpsilon.orElse(DEFAULTVAL), levels.orElse(null));
         return ResponseEntity.ok().contentType(MediaType.valueOf("image/svg+xml")).body(svg);
     }
 
@@ -172,7 +168,6 @@ public class NetworkDiffController {
             @ApiParam(value = "Network1 UUID") @PathVariable("network1Uuid") UUID network1Uuid,
             @ApiParam(value = "Network2 UUID") @PathVariable("network2Uuid") UUID network2Uuid,
             @ApiParam(value = "Substation ID") @PathVariable("subId") String subId) {
-
         String jsonDiff = networkDiffService.diffSubstation(network1Uuid, network2Uuid, subId);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(jsonDiff);
     }
@@ -184,9 +179,8 @@ public class NetworkDiffController {
             @ApiParam(value = "Network1 UUID") @PathVariable("network1Uuid") UUID network1Uuid,
             @ApiParam(value = "Network2 UUID") @PathVariable("network2Uuid") UUID network2Uuid,
             @ApiParam(value = "Substation ID") @PathVariable("subId") String subId,
-            @ApiParam(value = "Epsilon") @PathVariable("epsilon") Double epsilon) {
-
-        String jsonDiff = networkDiffService.diffSubstation(network1Uuid, network2Uuid, subId, epsilon);
+            @ApiParam(value = "Epsilon") @PathVariable("epsilon") Optional<Double> epsilon) {
+        String jsonDiff = networkDiffService.diffSubstation(network1Uuid, network2Uuid, subId, epsilon.orElse(DEFAULTVAL));
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(jsonDiff);
     }
 
@@ -197,11 +191,9 @@ public class NetworkDiffController {
             @ApiParam(value = "Network1 UUID") @PathVariable("network1Uuid") UUID network1Uuid,
             @ApiParam(value = "Network2 UUID") @PathVariable("network2Uuid") UUID network2Uuid,
             @ApiParam(value = "Substation ID") @PathVariable("subId") String subId,
-            @ApiParam(value = "Epsilon") @PathVariable("epsilon") Double epsilon,
-            @ApiParam(value = "Voltage Epsilon") @PathVariable("voltageEpsilon") Double voltageEpsilon) {
-
-        String jsonDiff = networkDiffService.diffSubstation(network1Uuid, network2Uuid, subId, epsilon, voltageEpsilon);
+            @ApiParam(value = "Epsilon") @PathVariable("epsilon") Optional<Double> epsilon,
+            @ApiParam(value = "Voltage Epsilon") @PathVariable("voltageEpsilon") Optional<Double> voltageEpsilon) {
+        String jsonDiff = networkDiffService.diffSubstation(network1Uuid, network2Uuid, subId, epsilon.orElse(DEFAULTVAL), voltageEpsilon.orElse(DEFAULTVAL));
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(jsonDiff);
     }
-
 }
