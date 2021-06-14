@@ -29,7 +29,7 @@ import static com.powsybl.sld.svg.DiagramStyles.CONSTANT_COLOR_CLASS;
  * @author Giovanni Ferrari <giovanni.ferrari@techrain.eu>
  * @author Christian Biasuzzi <christian.biasuzzi@techrain.eu>
  */
-public class DiffStyleProvider extends DefaultDiagramStyleProvider implements ArrowsStyleProvider {
+public class DiffStyleProvider extends DefaultDiagramStyleProvider implements ExtendedDiagramStyleProvider {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DiffStyleProvider.class);
 

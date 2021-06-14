@@ -134,7 +134,7 @@ class NetworkDiffService {
         LevelsData levelsData = parseLevelsData(levels);
         LOGGER.info("levels data: {}", levelsData);
 
-        return getVoltageLevelSvgDiff(network1, network2, vlId, epsilon, voltageEpsilon);
+        return getVoltageLevelSvgDiff(network1, network2, vlId, epsilon, voltageEpsilon, levelsData);
     }
 
     private LevelsData parseLevelsData(String levels) {
@@ -146,20 +146,21 @@ class NetworkDiffService {
         }
     }
 
-    private String getVoltageLevelSvgDiff(Network network1, Network network2, String vlId, double epsilon, double voltageEpsilon) {
+    private String getVoltageLevelSvgDiff(Network network1, Network network2, String vlId, double epsilon, double voltageEpsilon, LevelsData levelsData) {
         try {
             String jsonDiff = diffVoltageLevel(network1, network2, vlId, epsilon, voltageEpsilon);
 //            DiffData diffData = new DiffData(jsonDiff);
 //            return writeVoltageLevelSvg(network1, vlId, new DiffStyleProvider(diffData));
             ColorsLevelsDiffData diffData = new ColorsLevelsDiffData(jsonDiff);
-            return writeVoltageLevelSvg(network1, vlId, new ColorsLevelsDiffStyleProvider(diffData, new ColorsLevelsDiffConfig(0, 10, true)));
+//            return writeVoltageLevelSvg(network1, vlId, new ColorsLevelsDiffStyleProvider(diffData, new ColorsLevelsDiffConfig(0, 10, true)));
+            return writeVoltageLevelSvg(network1, vlId, new MultipleColorsLevelsDiffStyleProvider(diffData, levelsData, true));
         } catch (PowsyblException | IOException e) {
             LOGGER.error(e.getMessage());
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         }
     }
 
-    private String writeVoltageLevelSvg(Network network, String vlId, ArrowsStyleProvider styleProvider) {
+    private String writeVoltageLevelSvg(Network network, String vlId, ExtendedDiagramStyleProvider styleProvider) {
         String svgData;
         String metadataData;
         String jsonData;
@@ -209,23 +210,24 @@ class NetworkDiffService {
         LevelsData levelsData = parseLevelsData(levels);
         LOGGER.info("levels data: {}", levelsData);
 
-        return getSubstationSvgDiff(network1, network2, substationId, epsilon, voltageEpsilon);
+        return getSubstationSvgDiff(network1, network2, substationId, epsilon, voltageEpsilon, levelsData);
     }
 
-    private String getSubstationSvgDiff(Network network1, Network network2, String substationId, double epsilon, double voltageEpsilon) {
+    private String getSubstationSvgDiff(Network network1, Network network2, String substationId, double epsilon, double voltageEpsilon, LevelsData levelsData) {
         try {
             String jsonDiff = diffSubstation(network1, network2, substationId, epsilon, voltageEpsilon);
 //            DiffData diffData = new DiffData(jsonDiff);
 //            return writeSubstationSvg(network1, substationId, new DiffStyleProvider(diffData));
             ColorsLevelsDiffData diffData = new ColorsLevelsDiffData(jsonDiff);
-            return writeSubstationSvg(network1, substationId, new ColorsLevelsDiffStyleProvider(diffData, new ColorsLevelsDiffConfig(0, 10, true)));
+//            return writeSubstationSvg(network1, substationId, new ColorsLevelsDiffStyleProvider(diffData, new ColorsLevelsDiffConfig(0, 10, true)));
+            return writeSubstationSvg(network1, substationId, new MultipleColorsLevelsDiffStyleProvider(diffData, levelsData, true));
         } catch (PowsyblException | IOException e) {
             LOGGER.error(e.getMessage());
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         }
     }
 
-    private String writeSubstationSvg(Network network, String substationId, ArrowsStyleProvider styleProvider) {
+    private String writeSubstationSvg(Network network, String substationId, ExtendedDiagramStyleProvider styleProvider) {
         String svgData;
         String metadataData;
         String jsonData;

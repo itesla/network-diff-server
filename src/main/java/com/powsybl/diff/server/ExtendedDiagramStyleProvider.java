@@ -13,10 +13,13 @@ import com.powsybl.sld.svg.DiagramStyleProvider;
 /**
  * @author Massimo Ferraro <massimo.ferraro@soft.it>
  */
-public interface ArrowsStyleProvider extends DiagramStyleProvider {
+public interface ExtendedDiagramStyleProvider extends DiagramStyleProvider {
 
     String getArrowsActiveStyle(FeederNode feederNode, ComponentLibrary componentLibrary);
 
     String getArrowsReactiveStyle(FeederNode feederNode, ComponentLibrary componentLibrary);
 
+    default String getCss() {
+        return null;
+    }
 }
