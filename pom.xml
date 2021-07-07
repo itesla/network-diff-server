@@ -39,6 +39,7 @@
         <powsybl-core.version>4.1.2</powsybl-core.version>
         <powsybl-network-store.version>1.0.0-SNAPSHOT</powsybl-network-store.version>
         <powsybl-single-line-diagram.version>2.1.0</powsybl-single-line-diagram.version>
+        <network-diff-core.version>1.0.0-SNAPSHOT</network-diff-core.version>
     </properties>
 
     <build>
@@ -104,6 +105,11 @@
             <groupId>com.powsybl</groupId>
             <artifactId>network-diff-iidm</artifactId>
             <version>${powsybl-core.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.powsybl</groupId>
+            <artifactId>network-diff-core</artifactId>
+            <version>${network-diff-core.version}</version>
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>

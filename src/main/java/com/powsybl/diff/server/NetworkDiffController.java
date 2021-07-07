@@ -20,6 +20,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
+import static com.powsybl.diff.server.NetworkDiffService.DEFAULTLEVELSDATA;
+
 /**
  * @author Christian Biasuzzi <christian.biasuzzi@techrain.eu>
  */
@@ -120,7 +122,7 @@ public class NetworkDiffController {
             @ApiParam(value = "Epsilon") @PathVariable("epsilon") Optional<Double> epsilon,
             @ApiParam(value = "Voltage Epsilon") @PathVariable("voltageEpsilon") Optional<Double> voltageEpsilon,
             @ApiParam(value = "Levels", hidden = true) @RequestParam("levels") Optional<String> levels) {
-        String svg = networkDiffService.getVoltageLevelSvgDiff(network1Uuid, network2Uuid, vlId, epsilon.orElse(DEFAULTVAL), voltageEpsilon.orElse(DEFAULTVAL), levels.orElse(null));
+        String svg = networkDiffService.getVoltageLevelSvgDiff(network1Uuid, network2Uuid, vlId, epsilon.orElse(DEFAULTVAL), voltageEpsilon.orElse(DEFAULTVAL), levels.orElse(DEFAULTLEVELSDATA));
         return ResponseEntity.ok().contentType(MediaType.valueOf("image/svg+xml")).body(svg);
     }
 
@@ -157,7 +159,7 @@ public class NetworkDiffController {
             @ApiParam(value = "Epsilon") @PathVariable("epsilon") Optional<Double> epsilon,
             @ApiParam(value = "Voltage Epsilon") @PathVariable("voltageEpsilon") Optional<Double> voltageEpsilon,
             @ApiParam(value = "Levels", hidden = true) @RequestParam("levels") Optional<String> levels) {
-        String svg = networkDiffService.getSubstationSvgDiff(network1Uuid, network2Uuid, subId, epsilon.orElse(DEFAULTVAL), voltageEpsilon.orElse(DEFAULTVAL), levels.orElse(null));
+        String svg = networkDiffService.getSubstationSvgDiff(network1Uuid, network2Uuid, subId, epsilon.orElse(DEFAULTVAL), voltageEpsilon.orElse(DEFAULTVAL), levels.orElse(DEFAULTLEVELSDATA));
         return ResponseEntity.ok().contentType(MediaType.valueOf("image/svg+xml")).body(svg);
     }
 
