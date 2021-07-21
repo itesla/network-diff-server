@@ -126,6 +126,20 @@ public class NetworkDiffController {
         return ResponseEntity.ok().contentType(MediaType.valueOf("image/svg+xml")).body(svg);
     }
 
+    @GetMapping(value = "/networks/{network1Uuid}/mergedsvgdiff/{network2Uuid}/vl/{vlId}/{epsilon}/{voltageEpsilon}")
+    @ApiOperation(value = "get voltage level merged svg diff diagram, with current and voltage thresholds", produces = "image/svg+xml")
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "network diff merged VL")})
+    public ResponseEntity<String> getMergedSvg(
+            @ApiParam(value = "Network1 UUID") @PathVariable("network1Uuid") UUID network1Uuid,
+            @ApiParam(value = "Network2 UUID") @PathVariable("network2Uuid") UUID network2Uuid,
+            @ApiParam(value = "Voltage level ID") @PathVariable("vlId") String vlId,
+            @ApiParam(value = "Epsilon") @PathVariable("epsilon") Optional<Double> epsilon,
+            @ApiParam(value = "Voltage Epsilon") @PathVariable("voltageEpsilon") Optional<Double> voltageEpsilon,
+            @ApiParam(value = "Levels", hidden = true) @RequestParam("levels") Optional<String> levels) {
+        String svg = networkDiffService.getVoltageLevelMergedSvgDiff(network1Uuid, network2Uuid, vlId, epsilon.orElse(DEFAULTVAL), voltageEpsilon.orElse(DEFAULTVAL), levels.orElse(DEFAULTLEVELSDATA));
+        return ResponseEntity.ok().contentType(MediaType.valueOf("image/svg+xml")).body(svg);
+    }
+
     @GetMapping(value = "/networks/{network1Uuid}/svgdiff/{network2Uuid}/sub/{subId}")
     @ApiOperation(value = "get substation svg diff diagram", produces = "image/svg+xml")
     @ApiResponses(value = {@ApiResponse(code = 200, message = "network diff")})
@@ -160,6 +174,20 @@ public class NetworkDiffController {
             @ApiParam(value = "Voltage Epsilon") @PathVariable("voltageEpsilon") Optional<Double> voltageEpsilon,
             @ApiParam(value = "Levels", hidden = true) @RequestParam("levels") Optional<String> levels) {
         String svg = networkDiffService.getSubstationSvgDiff(network1Uuid, network2Uuid, subId, epsilon.orElse(DEFAULTVAL), voltageEpsilon.orElse(DEFAULTVAL), levels.orElse(DEFAULTLEVELSDATA));
+        return ResponseEntity.ok().contentType(MediaType.valueOf("image/svg+xml")).body(svg);
+    }
+
+    @GetMapping(value = "/networks/{network1Uuid}/mergedsvgdiff/{network2Uuid}/sub/{subId}/{epsilon}/{voltageEpsilon}")
+    @ApiOperation(value = "get substation merged svg diff diagram, with current and voltage thresholds", produces = "image/svg+xml")
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "network diff merged SUB")})
+    public ResponseEntity<String> getMergedSubSvg(
+            @ApiParam(value = "Network1 UUID") @PathVariable("network1Uuid") UUID network1Uuid,
+            @ApiParam(value = "Network2 UUID") @PathVariable("network2Uuid") UUID network2Uuid,
+            @ApiParam(value = "Substation ID") @PathVariable("subId") String subId,
+            @ApiParam(value = "Epsilon") @PathVariable("epsilon") Optional<Double> epsilon,
+            @ApiParam(value = "Voltage Epsilon") @PathVariable("voltageEpsilon") Optional<Double> voltageEpsilon,
+            @ApiParam(value = "Levels", hidden = true) @RequestParam("levels") Optional<String> levels) {
+        String svg = networkDiffService.getSubstationMergedSvgDiff(network1Uuid, network2Uuid, subId, epsilon.orElse(DEFAULTVAL), voltageEpsilon.orElse(DEFAULTVAL), levels.orElse(DEFAULTLEVELSDATA));
         return ResponseEntity.ok().contentType(MediaType.valueOf("image/svg+xml")).body(svg);
     }
 

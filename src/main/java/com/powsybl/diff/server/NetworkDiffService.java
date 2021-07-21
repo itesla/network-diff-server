@@ -152,4 +152,32 @@ class NetworkDiffService {
         LOGGER.info("network1 uuid: {}, network2 uuid: {}, substation: {}, threshold: {}, voltageThreshold: {}, diff: {}", network1Uuid, network2Uuid, substationId, epsilon, voltageEpsilon, jsonDiff);
         return jsonDiff;
     }
+
+    public String getVoltageLevelMergedSvgDiff(UUID network1Uuid, UUID network2Uuid, String vlId, double epsilon, double voltageEpsilon, String levels) {
+        Objects.requireNonNull(network1Uuid);
+        Objects.requireNonNull(network2Uuid);
+        Objects.requireNonNull(vlId);
+        Objects.requireNonNull(levels);
+        Network network1 = getNetwork(network1Uuid);
+        Network network2 = getNetwork(network2Uuid);
+
+        LevelsData levelsData = LevelsData.parseData(levels);
+        LOGGER.info("levels data: {}", levelsData);
+
+        return new NetworkDiffUtil().getVoltageLevelMergedSvgDiff(network1, network2, vlId, epsilon, voltageEpsilon, levelsData);
+    }
+
+    public String getSubstationMergedSvgDiff(UUID network1Uuid, UUID network2Uuid, String substationId, double epsilon, double voltageEpsilon, String levels) {
+        Objects.requireNonNull(network1Uuid);
+        Objects.requireNonNull(network2Uuid);
+        Objects.requireNonNull(substationId);
+        Objects.requireNonNull(levels);
+        Network network1 = getNetwork(network1Uuid);
+        Network network2 = getNetwork(network2Uuid);
+
+        LevelsData levelsData = LevelsData.parseData(levels);
+        LOGGER.info("levels data: {}", levelsData);
+
+        return new NetworkDiffUtil().getSubstationMergedSvgDiff(network1, network2, substationId, epsilon, voltageEpsilon, levelsData);
+    }
 }
