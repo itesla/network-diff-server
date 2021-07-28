@@ -153,7 +153,7 @@ class NetworkDiffService {
         return jsonDiff;
     }
 
-    public String getVoltageLevelMergedSvgDiff(UUID network1Uuid, UUID network2Uuid, String vlId, double epsilon, double voltageEpsilon, String levels) {
+    public String getVoltageLevelMergedSvgDiff(UUID network1Uuid, UUID network2Uuid, String vlId, double epsilon, double voltageEpsilon, String levels, boolean showCurrent) {
         Objects.requireNonNull(network1Uuid);
         Objects.requireNonNull(network2Uuid);
         Objects.requireNonNull(vlId);
@@ -164,10 +164,10 @@ class NetworkDiffService {
         LevelsData levelsData = LevelsData.parseData(levels);
         LOGGER.info("levels data: {}", levelsData);
 
-        return new NetworkDiffUtil().getVoltageLevelMergedSvgDiff(network1, network2, vlId, epsilon, voltageEpsilon, levelsData);
+        return new NetworkDiffUtil().getVoltageLevelMergedSvgDiff(network1, network2, vlId, epsilon, voltageEpsilon, levelsData, showCurrent);
     }
 
-    public String getSubstationMergedSvgDiff(UUID network1Uuid, UUID network2Uuid, String substationId, double epsilon, double voltageEpsilon, String levels) {
+    public String getSubstationMergedSvgDiff(UUID network1Uuid, UUID network2Uuid, String substationId, double epsilon, double voltageEpsilon, String levels, boolean showCurrent) {
         Objects.requireNonNull(network1Uuid);
         Objects.requireNonNull(network2Uuid);
         Objects.requireNonNull(substationId);
@@ -178,6 +178,6 @@ class NetworkDiffService {
         LevelsData levelsData = LevelsData.parseData(levels);
         LOGGER.info("levels data: {}", levelsData);
 
-        return new NetworkDiffUtil().getSubstationMergedSvgDiff(network1, network2, substationId, epsilon, voltageEpsilon, levelsData);
+        return new NetworkDiffUtil().getSubstationMergedSvgDiff(network1, network2, substationId, epsilon, voltageEpsilon, levelsData, showCurrent);
     }
 }
